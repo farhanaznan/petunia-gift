@@ -43,7 +43,7 @@ export default async function AdminCapacityPage() {
     <PageShell
       kicker="Capacity"
       title="Ship-date calendar"
-      lead="Set max orders per ship date for each sub-product. Closed slots disappear from checkout."
+      lead="Max orders per ship date. Museum of Us shares one pool across all frames; F1 and Graduation stay per sub-product."
     >
       <div style={{ overflowX: "auto", marginBottom: "1.5rem" }}>
         <table className="data-table">

@@ -4,6 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdminSession } from "@/lib/auth/session";
+import { syncMuseumCapacitySlots } from "@/lib/catalog/capacity";
 import { getDb } from "@/lib/db";
 import {
   capacitySlots,
@@ -199,6 +200,32 @@ export async function upsertCapacityAction(
   }
 
   const db = await getDb();
+  const [sub] = await db
+    .select({
+      id: subProducts.id,
+      productId: subProducts.productId,
+      nature: products.nature,
+    })
+    .from(subProducts)
+    .innerJoin(products, eq(subProducts.productId, products.id))
+    .where(eq(subProducts.id, subProductId))
+    .limit(1);
+  if (!sub) return { error: "Sub-product not found." };
+
+  if (sub.nature === "museum_of_us") {
+    await syncMuseumCapacitySlots({
+      productId: sub.productId,
+      shipDate,
+      maxOrders,
+      isOpen,
+    });
+    revalidatePath("/admin/capacity");
+    revalidatePath("/shop");
+    return {
+      info: "Museum capacity saved for all frames on this date (shared pool).",
+    };
+  }
+
   const [existing] = await db
     .select()
     .from(capacitySlots)
@@ -224,6 +251,7 @@ export async function upsertCapacityAction(
     });
   }
   revalidatePath("/admin/capacity");
+  revalidatePath("/shop");
   return { info: "Capacity slot saved." };
 }
 

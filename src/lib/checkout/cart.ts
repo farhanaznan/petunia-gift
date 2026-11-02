@@ -21,6 +21,7 @@ export const checkoutCartSchema = z.object({
   nature: productNatureSchema,
   unitPriceSen: z.number().int().nonnegative(),
   surchargeSen: z.number().int().nonnegative().default(0),
+  shipDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   customization: z.union([
     museumCustomizationSchema,
     f1CustomizationSchema,

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { PlaceOrderForm } from "@/components/checkout/place-order-form";
 import { PageShell } from "@/components/page-shell";
-import { listOpenCapacityWithRemaining } from "@/lib/catalog/capacity";
+import { getCapacityOnDate } from "@/lib/catalog/capacity";
 import { getCheckoutCart } from "@/lib/checkout/cart";
 import { MALAYSIA_STATES } from "@/lib/malaysia";
 import { senToRm } from "@/lib/money";
@@ -27,13 +27,34 @@ export default async function OrderPage() {
     );
   }
 
-  const dates = await listOpenCapacityWithRemaining(cart.subProductId);
+  const cap = await getCapacityOnDate({
+    nature: cart.nature,
+    productId: cart.productId,
+    subProductId: cart.subProductId,
+    shipDate: cart.shipDate,
+  });
+
+  if (!cap) {
+    return (
+      <PageShell
+        kicker="Checkout"
+        title="Ship date unavailable"
+        lead={`${cart.shipDate} no longer has remaining capacity. Choose another date.`}
+      >
+        <div className="cta-row">
+          <Link className="button" href={`/shop/${cart.productSlug}`}>
+            Pick another date
+          </Link>
+        </div>
+      </PageShell>
+    );
+  }
 
   return (
     <PageShell
       kicker="Checkout"
       title="Delivery details"
-      lead={`${cart.productName} · ${cart.subName} · ${senToRm(cart.unitPriceSen)}${cart.surchargeSen ? ` + ${senToRm(cart.surchargeSen)}` : ""}`}
+      lead={`${cart.productName} · ${cart.subName} · ${senToRm(cart.unitPriceSen)}${cart.surchargeSen ? ` + ${senToRm(cart.surchargeSen)}` : ""} · ship ${cart.shipDate}`}
     >
       <div className="panel" style={{ marginBottom: "1.5rem", maxWidth: 520, marginInline: "auto" }}>
         <p className="nature-tag">{cart.nature.replaceAll("_", " ")}</p>
@@ -51,10 +72,8 @@ export default async function OrderPage() {
         </pre>
       </div>
       <PlaceOrderForm
-        shipDates={dates.map((d) => ({
-          shipDate: d.shipDate,
-          remaining: d.remaining,
-        }))}
+        shipDate={cart.shipDate}
+        remaining={cap.remaining}
         states={[...MALAYSIA_STATES]}
         unitPriceSen={cart.unitPriceSen}
         surchargeSen={cart.surchargeSen}

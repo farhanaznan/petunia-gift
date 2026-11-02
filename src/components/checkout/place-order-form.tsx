@@ -11,19 +11,20 @@ import { senToRm } from "@/lib/money";
 const initial: ActionState = {};
 
 export function PlaceOrderForm({
-  shipDates,
+  shipDate,
+  remaining,
   states,
   unitPriceSen,
   surchargeSen,
 }: {
-  shipDates: { shipDate: string; remaining: number }[];
+  shipDate: string;
+  remaining: number;
   states: string[];
   unitPriceSen: number;
   surchargeSen: number;
 }) {
   const [state, action, pending] = useActionState(placeOrderAction, initial);
   const [selectedState, setSelectedState] = useState("");
-  const [shipDate, setShipDate] = useState(shipDates[0]?.shipDate ?? "");
 
   const shippingFeeSen = useMemo(() => {
     if (!selectedState) return null;
@@ -43,29 +44,11 @@ export function PlaceOrderForm({
     <form action={action} className="checkout-layout">
       <div className="panel stack">
         <div className="stack">
-          <span className="field-label">Ship date (open capacity only)</span>
-          <input type="hidden" name="shipDate" value={shipDate} required />
-          <div className="chip-row" role="listbox" aria-label="Ship dates">
-            {shipDates.map((d) => (
-              <button
-                key={d.shipDate}
-                type="button"
-                className="chip"
-                role="option"
-                aria-selected={shipDate === d.shipDate}
-                data-selected={shipDate === d.shipDate}
-                onClick={() => setShipDate(d.shipDate)}
-              >
-                {d.shipDate}
-                <span className="chip-meta">{d.remaining} left</span>
-              </button>
-            ))}
-          </div>
-          {!shipDates.length ? (
-            <p className="form-error">
-              No open capacity dates. Ask admin to add slots.
-            </p>
-          ) : null}
+          <span className="field-label">Ship date (locked)</span>
+          <p style={{ margin: 0 }}>
+            <strong>{shipDate}</strong>
+            <span className="muted"> · {remaining} left</span>
+          </p>
         </div>
 
         <div className="form-grid">
@@ -137,7 +120,7 @@ export function PlaceOrderForm({
         <button
           className="button"
           type="submit"
-          disabled={pending || !shipDates.length || !shipDate}
+          disabled={pending || remaining < 1}
         >
           {pending ? "Reserving capacity…" : "Continue to Touch ’n Go payment"}
         </button>

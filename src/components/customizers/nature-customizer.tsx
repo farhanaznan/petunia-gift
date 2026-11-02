@@ -23,12 +23,14 @@ export function NatureCustomizer({
   productSlug,
   subSlug,
   unitPriceSen,
+  shipDate,
 }: {
   nature: ProductNature;
   config: SubProductConfig;
   productSlug: string;
   subSlug: string;
   unitPriceSen: number;
+  shipDate: string;
 }) {
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
@@ -65,7 +67,11 @@ export function NatureCustomizer({
     <form action={action} className="customizer-shell">
       <input type="hidden" name="productSlug" value={productSlug} />
       <input type="hidden" name="subSlug" value={subSlug} />
+      <input type="hidden" name="shipDate" value={shipDate} />
       <input type="hidden" name="customization" value={customizationJson} />
+      <p className="muted" style={{ textAlign: "center", margin: 0 }}>
+        Shipping {shipDate}
+      </p>
 
       <div className="panel stack">
         {nature === "museum_of_us" ? (

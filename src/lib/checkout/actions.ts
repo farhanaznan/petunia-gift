@@ -1,8 +1,8 @@
 "use server";
 
-import { and, count, eq, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
-import { z } from "zod";
+import { getCapacityOnDate } from "@/lib/catalog/capacity";
 import {
   clearCheckoutCart,
   getCheckoutCart,
@@ -11,7 +11,6 @@ import {
 } from "@/lib/checkout/cart";
 import { getDb } from "@/lib/db";
 import {
-  capacitySlots,
   orderMedia,
   orders,
   paymentSettings,
@@ -99,7 +98,12 @@ export async function startCheckoutAction(
 ): Promise<ActionState> {
   const productSlug = String(formData.get("productSlug") || "");
   const subSlug = String(formData.get("subSlug") || "");
+  const shipDate = String(formData.get("shipDate") || "");
   const customizationRaw = String(formData.get("customization") || "{}");
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(shipDate)) {
+    return { error: "Pick a ship date before continuing." };
+  }
 
   const db = await getDb();
   const [product] = await db
@@ -122,6 +126,16 @@ export async function startCheckoutAction(
     .limit(1);
   if (!sub) return { error: "Sub-product not found." };
 
+  const cap = await getCapacityOnDate({
+    nature: product.nature,
+    productId: product.id,
+    subProductId: sub.id,
+    shipDate,
+  });
+  if (!cap) {
+    return { error: "That ship date is full or unavailable. Pick another date." };
+  }
+
   let raw: unknown;
   try {
     raw = JSON.parse(customizationRaw);
@@ -142,15 +156,14 @@ export async function startCheckoutAction(
     nature: product.nature,
     unitPriceSen: sub.priceSen,
     surchargeSen: parsed.surchargeSen,
+    shipDate,
     customization: parsed.value,
   });
 
   redirect("/order");
 }
 
-const placeOrderSchema = malaysiaAddressSchema.extend({
-  shipDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-});
+const placeOrderSchema = malaysiaAddressSchema;
 
 export async function placeOrderAction(
   _prev: ActionState,
@@ -170,10 +183,19 @@ export async function placeOrderAction(
     city: formData.get("city"),
     state: formData.get("state"),
     country: "MY",
-    shipDate: formData.get("shipDate"),
   });
   if (!parsed.success) {
-    return { error: "Please complete a valid Malaysia address and ship date." };
+    return { error: "Please complete a valid Malaysia address." };
+  }
+
+  const cap = await getCapacityOnDate({
+    nature: cart.nature,
+    productId: cart.productId,
+    subProductId: cart.subProductId,
+    shipDate: cart.shipDate,
+  });
+  if (!cap) {
+    return { error: "That ship date is full. Go back and pick another date." };
   }
 
   const db = await getDb();
@@ -184,35 +206,6 @@ export async function placeOrderAction(
     cart.surchargeSen,
     shippingFeeSen,
   );
-
-  const [slot] = await db
-    .select()
-    .from(capacitySlots)
-    .where(
-      and(
-        eq(capacitySlots.subProductId, cart.subProductId),
-        eq(capacitySlots.shipDate, parsed.data.shipDate),
-        eq(capacitySlots.isOpen, true),
-      ),
-    )
-    .limit(1);
-  if (!slot) return { error: "That ship date is not available." };
-
-  const [active] = await db
-    .select({ value: count() })
-    .from(orders)
-    .where(
-      and(
-        eq(orders.subProductId, cart.subProductId),
-        eq(orders.shipDate, parsed.data.shipDate),
-        sql`${orders.status} in ('draft_hold','pending_payment_review','confirmed','done')`,
-      ),
-    );
-
-  const used = active?.value ?? 0;
-  if (used >= slot.maxOrders) {
-    return { error: "That ship date is full. Pick another date." };
-  }
 
   const publicRef = makePublicRef();
   const statusToken = makeStatusToken();
@@ -225,7 +218,7 @@ export async function placeOrderAction(
       status: "draft_hold",
       productId: cart.productId,
       subProductId: cart.subProductId,
-      shipDate: parsed.data.shipDate,
+      shipDate: cart.shipDate,
       unitPriceSen: cart.unitPriceSen,
       surchargeSen: cart.surchargeSen,
       shippingFeeSen,
