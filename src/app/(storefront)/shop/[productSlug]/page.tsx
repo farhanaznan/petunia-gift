@@ -128,11 +128,12 @@ export default async function ProductPage({
             </p>
           )}
         </>
-      ) : (
-        <p className="muted" style={{ textAlign: "center" }}>
-          Select a ship date above to see available options.
-        </p>
-      )}
+      ) : dates.length ? (
+        <div className="empty-state">
+          <h3>Pick a date to continue</h3>
+          <p>Available options appear after you choose a ship date with remaining capacity.</p>
+        </div>
+      ) : null}
     </PageShell>
   );
 }

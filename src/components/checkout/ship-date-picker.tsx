@@ -15,9 +15,10 @@ export function ShipDatePicker({
 
   if (!dates.length) {
     return (
-      <p className="form-error" style={{ textAlign: "center" }}>
-        No open ship dates with remaining capacity. Please check back later.
-      </p>
+      <div className="empty-state">
+        <h3>No open dates</h3>
+        <p>Capacity is full for now. Please check back soon.</p>
+      </div>
     );
   }
 

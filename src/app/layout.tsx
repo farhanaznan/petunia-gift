@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Great_Vibes, Jost } from "next/font/google";
+import { DM_Sans, Fraunces, Great_Vibes } from "next/font/google";
 import "./globals.css";
 
-const display = Cormorant_Garamond({
+const display = Fraunces({
   variable: "--font-display",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
@@ -14,10 +14,10 @@ const script = Great_Vibes({
   weight: ["400"],
 });
 
-const body = Jost({
+const body = DM_Sans({
   variable: "--font-body",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {

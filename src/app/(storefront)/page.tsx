@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ProductTile } from "@/components/gallery/product-tile";
+import { Reveal } from "@/components/gallery/reveal";
 import { listActiveProducts, listSubsForProduct } from "@/lib/catalog/queries";
 import { senToRm } from "@/lib/money";
 
@@ -21,6 +22,7 @@ export default async function HomePage() {
         product: p,
         from,
         tall: index % 3 === 1,
+        index,
       };
     }),
   );
@@ -41,10 +43,12 @@ export default async function HomePage() {
       </section>
 
       <section className="home-featured" style={{ width: "100%", paddingTop: 0 }}>
-        <h2>The collection</h2>
+        <Reveal>
+          <h2>The collection</h2>
+        </Reveal>
         {tiles.length ? (
           <div className="masonry">
-            {tiles.map(({ product, from, tall }) => (
+            {tiles.map(({ product, from, tall, index }) => (
               <ProductTile
                 key={product.id}
                 href={`/shop/${product.slug}`}
@@ -55,13 +59,17 @@ export default async function HomePage() {
                 badgeText={product.badgeText}
                 natureLabel={product.nature.replaceAll("_", " ")}
                 tall={tall}
+                index={index}
               />
             ))}
           </div>
         ) : (
-          <p className="lead">Catalog is empty. Seed products to begin.</p>
+          <div className="empty-state">
+            <h3>Coming soon</h3>
+            <p>The gallery is being prepared. Check back shortly.</p>
+          </div>
         )}
-        <div className="cta-row" style={{ marginTop: "0.5rem" }}>
+        <div className="cta-row" style={{ marginTop: "0.75rem" }}>
           <Link className="button secondary" href="/shop">
             View all
           </Link>
