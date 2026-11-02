@@ -12,6 +12,7 @@ export default async function OrderThanksPage({
 
   return (
     <PageShell
+      kicker="Done"
       title="Order received"
       lead={
         ref
@@ -19,10 +20,15 @@ export default async function OrderThanksPage({
           : "We’ll confirm after reviewing your Touch ’n Go receipt."
       }
     >
-      <p className="muted">Soft launch: status updates are manual for now.</p>
-      <Link className="button secondary" href="/shop">
-        Back to shop
-      </Link>
+      <div className="panel elevated stack" style={{ maxWidth: 480 }}>
+        <p className="muted" style={{ margin: 0 }}>
+          Soft launch: status updates are manual for now. Keep your reference
+          handy if you message us.
+        </p>
+        <Link className="button" href="/shop">
+          Back to shop
+        </Link>
+      </div>
     </PageShell>
   );
 }

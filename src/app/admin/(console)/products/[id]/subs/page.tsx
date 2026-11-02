@@ -53,7 +53,7 @@ export default async function AdminSubProductsPage({
   );
 
   return (
-    <PageShell title="Sub-products" lead={product.name}>
+    <PageShell kicker="Catalog" title="Sub-products" lead={product.name}>
       <SubProductEditor
         productId={product.id}
         nature={product.nature}

@@ -18,6 +18,15 @@ const STATUSES = [
   "done",
 ] as const;
 
+function statusTone(status: string): "ok" | "warn" | "danger" | "neutral" {
+  if (status === "confirmed" || status === "done") return "ok";
+  if (status === "pending_payment_review" || status === "draft_hold") return "warn";
+  if (status === "rejected" || status === "cancelled" || status === "expired_hold") {
+    return "danger";
+  }
+  return "neutral";
+}
+
 export default async function AdminOrdersPage({
   searchParams,
 }: {
@@ -55,10 +64,14 @@ export default async function AdminOrdersPage({
     conditions.push(eq(orders.subProductId, sp.subProductId));
   }
   if (sp.orderDateFrom && /^\d{4}-\d{2}-\d{2}$/.test(sp.orderDateFrom)) {
-    conditions.push(gte(orders.createdAt, new Date(`${sp.orderDateFrom}T00:00:00.000Z`)));
+    conditions.push(
+      gte(orders.createdAt, new Date(`${sp.orderDateFrom}T00:00:00.000Z`)),
+    );
   }
   if (sp.orderDateTo && /^\d{4}-\d{2}-\d{2}$/.test(sp.orderDateTo)) {
-    conditions.push(lte(orders.createdAt, new Date(`${sp.orderDateTo}T23:59:59.999Z`)));
+    conditions.push(
+      lte(orders.createdAt, new Date(`${sp.orderDateTo}T23:59:59.999Z`)),
+    );
   }
 
   const rows = db
@@ -84,19 +97,14 @@ export default async function AdminOrdersPage({
 
   return (
     <PageShell
-      title="Orders"
+      kicker="Orders"
+      title="Order desk"
       lead="Filter by order date, ship date, sub-product, or status."
     >
-      <form method="get" className="panel stack" style={{ marginBottom: "1.25rem" }}>
-        <div
-          style={{
-            display: "grid",
-            gap: "0.75rem",
-            gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
-          }}
-        >
+      <form method="get" className="filter-bar">
+        <div className="filter-bar-grid">
           <label className="stack">
-            <span>Order date from</span>
+            <span className="field-label">Order from</span>
             <input
               type="date"
               name="orderDateFrom"
@@ -104,7 +112,7 @@ export default async function AdminOrdersPage({
             />
           </label>
           <label className="stack">
-            <span>Order date to</span>
+            <span className="field-label">Order to</span>
             <input
               type="date"
               name="orderDateTo"
@@ -112,11 +120,11 @@ export default async function AdminOrdersPage({
             />
           </label>
           <label className="stack">
-            <span>Ship date</span>
+            <span className="field-label">Ship date</span>
             <input type="date" name="shipDate" defaultValue={sp.shipDate ?? ""} />
           </label>
           <label className="stack">
-            <span>Sub-product</span>
+            <span className="field-label">Sub-product</span>
             <select name="subProductId" defaultValue={sp.subProductId ?? ""}>
               <option value="">All</option>
               {subs.map((s) => (
@@ -127,7 +135,7 @@ export default async function AdminOrdersPage({
             </select>
           </label>
           <label className="stack">
-            <span>Status</span>
+            <span className="field-label">Status</span>
             <select name="status" defaultValue={sp.status ?? ""}>
               <option value="">All</option>
               {STATUSES.map((s) => (
@@ -138,7 +146,7 @@ export default async function AdminOrdersPage({
             </select>
           </label>
         </div>
-        <div style={{ display: "flex", gap: "0.75rem" }}>
+        <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
           <button className="button" type="submit">
             Apply filters
           </button>
@@ -148,17 +156,48 @@ export default async function AdminOrdersPage({
         </div>
       </form>
 
-      <ul className="route-list">
-        {rows.map((o) => (
-          <li key={o.id}>
-            <Link href={`/admin/orders/${o.id}`}>
-              {o.publicRef} · {o.status} · ship {o.shipDate} · {senToRm(o.totalSen)} ·{" "}
-              {o.productName}/{o.subName} · {o.email}
-            </Link>
-          </li>
-        ))}
-      </ul>
-      {!rows.length ? <p className="muted">No orders match these filters.</p> : null}
+      <div style={{ overflowX: "auto" }}>
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Ref</th>
+              <th>Status</th>
+              <th>Ship</th>
+              <th>Product</th>
+              <th>Total</th>
+              <th>Email</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((o) => (
+              <tr key={o.id}>
+                <td>
+                  <Link href={`/admin/orders/${o.id}`}>{o.publicRef}</Link>
+                </td>
+                <td>
+                  <span
+                    className="status-pill"
+                    data-tone={statusTone(o.status)}
+                  >
+                    {o.status}
+                  </span>
+                </td>
+                <td>{o.shipDate}</td>
+                <td>
+                  {o.productName} / {o.subName}
+                </td>
+                <td>{senToRm(o.totalSen)}</td>
+                <td>{o.email}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {!rows.length ? (
+        <p className="muted" style={{ marginTop: "1rem" }}>
+          No orders match these filters.
+        </p>
+      ) : null}
     </PageShell>
   );
 }

@@ -14,8 +14,9 @@ export default async function OrderPage() {
   if (!cart) {
     return (
       <PageShell
-        title="Checkout"
-        lead="No item in checkout yet. Pick a product from the shop."
+        kicker="Checkout"
+        title="Nothing in checkout yet"
+        lead="Pick a product from the shop to begin."
       >
         <Link className="button" href="/shop">
           Browse shop
@@ -28,16 +29,21 @@ export default async function OrderPage() {
 
   return (
     <PageShell
-      title="Checkout"
-      lead={`${cart.productName} · ${cart.subName}`}
+      kicker="Checkout"
+      title="Delivery details"
+      lead={`${cart.productName} · ${cart.subName} · ${senToRm(cart.unitPriceSen)}${cart.surchargeSen ? ` + ${senToRm(cart.surchargeSen)}` : ""}`}
     >
-      <div className="panel stack" style={{ marginBottom: "1rem" }}>
-        <p>
-          Review: {cart.nature.replaceAll("_", " ")} · base{" "}
-          {senToRm(cart.unitPriceSen)}
-          {cart.surchargeSen ? ` + surcharge ${senToRm(cart.surchargeSen)}` : ""}
-        </p>
-        <pre style={{ whiteSpace: "pre-wrap", fontSize: "0.85rem", margin: 0 }}>
+      <div className="panel" style={{ marginBottom: "1.25rem" }}>
+        <p className="nature-tag">{cart.nature.replaceAll("_", " ")}</p>
+        <pre
+          style={{
+            whiteSpace: "pre-wrap",
+            fontSize: "0.85rem",
+            margin: 0,
+            fontFamily: "var(--font-body), sans-serif",
+            color: "var(--muted)",
+          }}
+        >
           {JSON.stringify(cart.customization, null, 2)}
         </pre>
       </div>

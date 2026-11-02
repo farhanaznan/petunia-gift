@@ -13,9 +13,14 @@ const links = [
 export function AdminNav({ email }: { email?: string }) {
   return (
     <nav className="admin-nav" aria-label="Admin">
-      <Link href="/admin" className="brand">
-        Petunia Admin
-      </Link>
+      <div>
+        <Link href="/admin" className="brand">
+          Petunia Ops
+        </Link>
+        <p className="muted" style={{ margin: "0.35rem 0 0", fontSize: "0.8rem" }}>
+          Soft-launch console
+        </p>
+      </div>
       <ul>
         {links.map((link) => (
           <li key={link.href}>

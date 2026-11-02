@@ -54,16 +54,27 @@ export default async function OrderPayPage({
 
   return (
     <PageShell
+      kicker="Payment"
       title="Pay with Touch ’n Go"
-      lead={`Order ${order.publicRef} · total ${senToRm(order.totalSen)} · ${order.status}`}
+      lead={`Order ${order.publicRef} · total ${senToRm(order.totalSen)} · ${order.status.replaceAll("_", " ")}`}
     >
-      <div className="panel stack" style={{ marginBottom: "1rem" }}>
-        <p>Item {senToRm(order.unitPriceSen)}</p>
-        <p>Surcharge {senToRm(order.surchargeSen)}</p>
-        <p>Shipping {senToRm(order.shippingFeeSen)}</p>
-        <p>
-          <strong>Total {senToRm(order.totalSen)}</strong>
-        </p>
+      <div className="price-board" style={{ marginBottom: "1.25rem", maxWidth: 420 }}>
+        <div className="row">
+          <span>Item</span>
+          <span>{senToRm(order.unitPriceSen)}</span>
+        </div>
+        <div className="row">
+          <span>Surcharge</span>
+          <span>{senToRm(order.surchargeSen)}</span>
+        </div>
+        <div className="row">
+          <span>Shipping</span>
+          <span>{senToRm(order.shippingFeeSen)}</span>
+        </div>
+        <div className="row total">
+          <span>Total</span>
+          <span>{senToRm(order.totalSen)}</span>
+        </div>
       </div>
       <PayForm
         publicRef={order.publicRef}

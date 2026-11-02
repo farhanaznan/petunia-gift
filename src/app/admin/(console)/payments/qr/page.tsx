@@ -14,19 +14,20 @@ export default async function AdminTngQrPage() {
 
   return (
     <PageShell
+      kicker="Payments"
       title="Touch ’n Go QR"
-      lead="Upload or replace the shared TnG QR shown at checkout payment."
+      lead="Upload or replace the shared QR shown on the checkout payment step."
     >
       {row?.tngQrKey ? (
-        <div className="panel stack" style={{ marginBottom: "1rem" }}>
-          <p className="muted">
+        <div className="panel elevated stack" style={{ marginBottom: "1rem", maxWidth: 360 }}>
+          <p className="muted" style={{ margin: 0 }}>
             Current key: <code>{row.tngQrKey}</code>
           </p>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={`/api/media?key=${encodeURIComponent(row.tngQrKey)}`}
             alt="Current Touch n Go QR"
-            style={{ width: "min(240px, 100%)", background: "#fff", padding: 8 }}
+            style={{ width: "100%", background: "#fff", borderRadius: "0.55rem" }}
           />
         </div>
       ) : (
@@ -37,7 +38,7 @@ export default async function AdminTngQrPage() {
         <MediaKeyField
           name="tngQrKey"
           kind="tng_qr"
-          label="Upload TnG QR image (JPEG/PNG/WebP)"
+          label="Upload TnG QR image"
           defaultKey={row?.tngQrKey ?? ""}
         />
       </AdminActionForm>

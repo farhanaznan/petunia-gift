@@ -32,21 +32,21 @@ export function AdminLoginForm({ nextPath }: { nextPath: string }) {
   const info = loginState.info || seedState.info;
 
   return (
-    <div className="stack" style={{ maxWidth: 360 }}>
-      <form action={loginFormAction} className="panel stack">
+    <div className="stack">
+      <form action={loginFormAction} className="stack">
         <input type="hidden" name="next" value={nextPath} />
         <label className="stack">
-          <span>Email</span>
+          <span className="field-label">Email</span>
           <input
             name="email"
             type="email"
             autoComplete="username"
             required
-            placeholder="admin@example.com"
+            placeholder="admin@petunia.local"
           />
         </label>
         <label className="stack">
-          <span>Password</span>
+          <span className="field-label">Password</span>
           <input
             name="password"
             type="password"
@@ -76,8 +76,7 @@ export function AdminLoginForm({ nextPath }: { nextPath: string }) {
           {seedPending ? "Seeding…" : "Seed first admin from env"}
         </button>
         <p className="muted" style={{ fontSize: "0.85rem", marginTop: "0.5rem" }}>
-          Only works when <code>admins</code> is empty and{" "}
-          <code>ADMIN_SEED_EMAIL</code> / <code>ADMIN_SEED_PASSWORD</code> are set.
+          Only works when <code>admins</code> is empty and seed env vars are set.
         </p>
       </form>
     </div>

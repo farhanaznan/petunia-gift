@@ -43,21 +43,28 @@ export function SubProductEditor({
 
   return (
     <div className="stack" style={{ gap: "1.5rem" }}>
-      <ul className="route-list">
+      <ul className="product-rail">
         {subs.map((s) => (
           <li key={s.id}>
             <button
               type="button"
-              className="button secondary"
-              style={{ marginRight: "0.5rem" }}
+              className="product-link"
+              style={{ width: "100%", cursor: "pointer", textAlign: "left" }}
               onClick={() => setEditingId(s.id)}
             >
-              Edit
+              <div>
+                <h3 className="product-link-title">
+                  {s.name}
+                  {s.badgeText ? <span className="badge">{s.badgeText}</span> : null}
+                </h3>
+                <p className="product-link-meta">
+                  {s.slug}
+                  {!s.isActive ? " · inactive" : ""}
+                  {s.images.length ? ` · ${s.images.length} image(s)` : ""}
+                </p>
+              </div>
+              <div className="product-link-price">{senToRm(s.priceSen)}</div>
             </button>
-            {s.name} ({s.slug}) — {senToRm(s.priceSen)}
-            {s.badgeText ? ` · ${s.badgeText}` : ""}
-            {!s.isActive ? " · inactive" : ""}
-            {s.images.length ? ` · ${s.images.length} image(s)` : ""}
           </li>
         ))}
       </ul>
@@ -72,7 +79,16 @@ export function SubProductEditor({
         </button>
       </div>
 
-      <h2>{editing ? `Edit ${editing.name}` : "Create sub-product"}</h2>
+      <h2
+        style={{
+          margin: 0,
+          fontFamily: "var(--font-display), sans-serif",
+          letterSpacing: "-0.03em",
+          fontSize: "1.4rem",
+        }}
+      >
+        {editing ? `Edit ${editing.name}` : "Create sub-product"}
+      </h2>
       <AdminActionForm
         key={editing?.id ?? "new"}
         action={upsertSubProductAction}
@@ -80,69 +96,77 @@ export function SubProductEditor({
       >
         <input type="hidden" name="productId" value={productId} />
         {editing ? <input type="hidden" name="id" value={editing.id} /> : null}
-        <label className="stack">
-          <span>Slug</span>
-          <input name="slug" required defaultValue={editing?.slug ?? ""} />
-        </label>
-        <label className="stack">
-          <span>Name</span>
-          <input name="name" required defaultValue={editing?.name ?? ""} />
-        </label>
-        <label className="stack">
-          <span>Description</span>
-          <textarea
-            name="description"
-            rows={2}
-            defaultValue={editing?.description ?? ""}
-          />
-        </label>
-        <label className="stack">
-          <span>Price (sen)</span>
-          <input
-            name="priceSen"
-            type="number"
-            required
-            defaultValue={editing?.priceSen ?? 5000}
-          />
-        </label>
-        <label className="stack">
-          <span>Badge (e.g. HOT!)</span>
-          <input name="badgeText" defaultValue={editing?.badgeText ?? ""} />
-        </label>
-        <label className="stack">
-          <span>Sort order</span>
-          <input
-            name="sortOrder"
-            type="number"
-            defaultValue={editing?.sortOrder ?? 0}
-          />
-        </label>
-        <label className="stack">
-          <span>Nature config JSON ({nature})</span>
-          <textarea
-            name="config"
-            rows={10}
-            defaultValue={
-              editing
-                ? JSON.stringify(editing.config, null, 2)
-                : defaultConfig
-            }
-          />
-        </label>
-        <label style={{ display: "flex", gap: "0.5rem" }}>
-          <input
-            name="isActive"
-            type="checkbox"
-            defaultChecked={editing?.isActive ?? true}
-          />{" "}
-          Active
-        </label>
+        <div className="form-grid">
+          <label className="stack">
+            <span className="field-label">Slug</span>
+            <input name="slug" required defaultValue={editing?.slug ?? ""} />
+          </label>
+          <label className="stack">
+            <span className="field-label">Name</span>
+            <input name="name" required defaultValue={editing?.name ?? ""} />
+          </label>
+          <label className="stack span-2">
+            <span className="field-label">Description</span>
+            <textarea
+              name="description"
+              rows={2}
+              defaultValue={editing?.description ?? ""}
+            />
+          </label>
+          <label className="stack">
+            <span className="field-label">Price (sen)</span>
+            <input
+              name="priceSen"
+              type="number"
+              required
+              defaultValue={editing?.priceSen ?? 5000}
+            />
+          </label>
+          <label className="stack">
+            <span className="field-label">Badge (e.g. HOT!)</span>
+            <input name="badgeText" defaultValue={editing?.badgeText ?? ""} />
+          </label>
+          <label className="stack">
+            <span className="field-label">Sort order</span>
+            <input
+              name="sortOrder"
+              type="number"
+              defaultValue={editing?.sortOrder ?? 0}
+            />
+          </label>
+          <label
+            className="stack"
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: "0.5rem",
+            }}
+          >
+            <input
+              name="isActive"
+              type="checkbox"
+              defaultChecked={editing?.isActive ?? true}
+            />{" "}
+            Active
+          </label>
+          <label className="stack span-2">
+            <span className="field-label">Nature config JSON ({nature})</span>
+            <textarea
+              name="config"
+              rows={10}
+              defaultValue={
+                editing ? JSON.stringify(editing.config, null, 2) : defaultConfig
+              }
+            />
+          </label>
+        </div>
       </AdminActionForm>
 
       {editing ? (
-        <div className="panel stack">
-          <h3>Gallery images</h3>
-          <ul className="route-list">
+        <div className="panel elevated stack">
+          <h3 style={{ margin: 0, fontSize: "1.05rem" }}>Gallery images</h3>
+          <ul className="upload-list">
             {editing.images.map((img) => (
               <li key={img.id}>
                 <a
@@ -166,7 +190,7 @@ export function SubProductEditor({
               subProductId={editing.id}
             />
             <label className="stack">
-              <span>Alt text</span>
+              <span className="field-label">Alt text</span>
               <input name="alt" defaultValue={editing.name} />
             </label>
           </AdminActionForm>

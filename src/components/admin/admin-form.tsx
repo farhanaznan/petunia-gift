@@ -19,7 +19,7 @@ export function AdminActionForm({
 }) {
   const [state, formAction, pending] = useActionState(action, initial);
   return (
-    <form action={formAction} className="panel stack">
+    <form action={formAction} className="panel elevated stack">
       {children}
       {state.error ? (
         <p className="form-error" role="alert">

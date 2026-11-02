@@ -17,53 +17,81 @@ export default async function AdminProductsPage() {
     : [];
 
   return (
-    <PageShell title="Products" lead="Main products CRUD.">
-      <ul className="route-list">
+    <PageShell
+      kicker="Catalog"
+      title="Products"
+      lead="Main products drive natures. Sub-products hold prices and config."
+    >
+      <ul className="product-rail">
         {rows.map((p) => (
           <li key={p.id}>
-            <Link href={`/admin/products/${p.id}`}>
-              {p.name} ({p.slug}) · {p.nature}
-              {!p.isActive ? " · inactive" : ""}
+            <Link className="product-link" href={`/admin/products/${p.id}`}>
+              <div>
+                <p className="nature-tag">{p.nature.replaceAll("_", " ")}</p>
+                <h2 className="product-link-title">
+                  {p.name}
+                  {p.badgeText ? <span className="badge">{p.badgeText}</span> : null}
+                </h2>
+                <p className="product-link-meta">
+                  {p.slug}
+                  {!p.isActive ? " · inactive" : ""}
+                </p>
+              </div>
+              <div className="product-link-price">Edit</div>
             </Link>
           </li>
         ))}
       </ul>
 
-      <h2 style={{ marginTop: "2rem" }}>New product</h2>
+      <h2
+        style={{
+          marginTop: "2rem",
+          fontFamily: "var(--font-display), sans-serif",
+          letterSpacing: "-0.03em",
+          fontSize: "1.4rem",
+        }}
+      >
+        New product
+      </h2>
       <AdminActionForm action={upsertProductAction} submitLabel="Create product">
-        <label className="stack">
-          <span>Slug</span>
-          <input name="slug" required placeholder="museum-of-us" />
-        </label>
-        <label className="stack">
-          <span>Name</span>
-          <input name="name" required />
-        </label>
-        <label className="stack">
-          <span>Description</span>
-          <textarea name="description" rows={3} />
-        </label>
-        <label className="stack">
-          <span>Nature</span>
-          <select name="nature" required defaultValue="museum_of_us">
-            {PRODUCT_NATURES.map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="stack">
-          <span>Badge</span>
-          <input name="badgeText" />
-        </label>
-        <label className="stack">
-          <span>Sort order</span>
-          <input name="sortOrder" type="number" defaultValue={0} />
-        </label>
-        <label style={{ display: "flex", gap: "0.5rem" }}>
-          <input name="isActive" type="checkbox" defaultChecked /> Active
-        </label>
+        <div className="form-grid">
+          <label className="stack">
+            <span className="field-label">Slug</span>
+            <input name="slug" required placeholder="museum-of-us" />
+          </label>
+          <label className="stack">
+            <span className="field-label">Name</span>
+            <input name="name" required />
+          </label>
+          <label className="stack span-2">
+            <span className="field-label">Description</span>
+            <textarea name="description" rows={3} />
+          </label>
+          <label className="stack">
+            <span className="field-label">Nature</span>
+            <select name="nature" required defaultValue="museum_of_us">
+              {PRODUCT_NATURES.map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="stack">
+            <span className="field-label">Badge</span>
+            <input name="badgeText" placeholder="HOT!" />
+          </label>
+          <label className="stack">
+            <span className="field-label">Sort order</span>
+            <input name="sortOrder" type="number" defaultValue={0} />
+          </label>
+          <label
+            className="stack"
+            style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: "0.5rem" }}
+          >
+            <input name="isActive" type="checkbox" defaultChecked /> Active
+          </label>
+        </div>
       </AdminActionForm>
     </PageShell>
   );

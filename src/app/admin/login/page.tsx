@@ -1,4 +1,3 @@
-import { PageShell } from "@/components/page-shell";
 import { AdminLoginForm } from "./login-form";
 
 export const metadata = { title: "Login" };
@@ -15,13 +14,25 @@ export default async function AdminLoginPage({
       : "/admin";
 
   return (
-    <div style={{ padding: "2rem clamp(1rem, 4vw, 3rem)" }}>
-      <PageShell
-        title="Admin login"
-        lead="Sign in with your admin email. Session cookie: petunia_admin_session (iron-session + bcrypt)."
-      >
+    <div className="admin-login-page">
+      <div className="admin-login-card panel elevated stack">
+        <p className="page-kicker">Petunia Ops</p>
+        <h1
+          style={{
+            fontFamily: "var(--font-display), sans-serif",
+            fontSize: "2.2rem",
+            letterSpacing: "-0.04em",
+            margin: 0,
+            lineHeight: 1,
+          }}
+        >
+          Admin login
+        </h1>
+        <p className="lead" style={{ marginBottom: 0 }}>
+          Soft-launch console — email and password required.
+        </p>
         <AdminLoginForm nextPath={nextPath} />
-      </PageShell>
+      </div>
     </div>
   );
 }

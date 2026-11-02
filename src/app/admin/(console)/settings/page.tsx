@@ -7,18 +7,23 @@ export const metadata = { title: "Settings" };
 export default function AdminSettingsPage() {
   return (
     <PageShell
-      title="Settings"
-      lead="Shipping fee rules, default surcharges, contact links (MVP-light)."
+      kicker="Settings"
+      title="Launch defaults"
+      lead="Shipping fee rules for Malaysia soft launch. English only."
     >
-      <div className="panel stack">
-        <p>
-          Peninsular default: <strong>{senToRm(SHIPPING_FEE_SEN.peninsular)}</strong>
-        </p>
-        <p>
-          East MY (Sabah / Sarawak / Labuan):{" "}
+      <div className="ops-stats">
+        <div className="ops-stat">
+          <strong>{senToRm(SHIPPING_FEE_SEN.peninsular)}</strong>
+          <span>Peninsular shipping</span>
+        </div>
+        <div className="ops-stat">
           <strong>{senToRm(SHIPPING_FEE_SEN.east)}</strong>
-        </p>
-        <p className="muted">Language: English only for v1 soft launch.</p>
+          <span>East MY shipping</span>
+        </div>
+        <div className="ops-stat">
+          <strong>EN</strong>
+          <span>Storefront language</span>
+        </div>
       </div>
     </PageShell>
   );

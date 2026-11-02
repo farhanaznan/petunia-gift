@@ -20,8 +20,9 @@ export default async function SubProductPage({
 
   return (
     <PageShell
+      kicker={`${product.name} · ${nature.label}`}
       title={sub.name}
-      lead={`${product.name} · ${nature.label} · ${senToRm(sub.priceSen)}${sub.badgeText ? ` · ${sub.badgeText}` : ""}`}
+      lead={`${senToRm(sub.priceSen)}${sub.badgeText ? ` · ${sub.badgeText}` : ""} — personalise this option, then continue to Malaysia checkout.`}
     >
       <NatureCustomizer
         nature={product.nature}

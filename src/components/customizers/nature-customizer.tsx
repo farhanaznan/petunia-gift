@@ -33,7 +33,9 @@ export function NatureCustomizer({
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [imageKeys, setImageKeys] = useState<string[]>([]);
-  const [legoVariant, setLegoVariant] = useState<"male" | "hijab_female" | "non_hijab_female">("male");
+  const [legoVariant, setLegoVariant] = useState<
+    "male" | "hijab_female" | "non_hijab_female"
+  >("male");
   const [gradImageKeys, setGradImageKeys] = useState<string[]>([]);
   const [state, action, pending] = useActionState(startCheckoutAction, initial);
 
@@ -60,96 +62,133 @@ export function NatureCustomizer({
   }, [nature, title, message, imageKeys, legoVariant, gradImageKeys]);
 
   return (
-    <form action={action} className="panel stack">
+    <form action={action} className="customizer-shell">
       <input type="hidden" name="productSlug" value={productSlug} />
       <input type="hidden" name="subSlug" value={subSlug} />
       <input type="hidden" name="customization" value={customizationJson} />
 
-      {nature === "museum_of_us" ? (
-        <>
-          <label className="stack">
-            <span>
-              Title ({title.length}/{museum.titleMaxChars})
-            </span>
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value.slice(0, museum.titleMaxChars))}
-              maxLength={museum.titleMaxChars}
-              required={museum.requireTitle}
+      <div className="panel elevated stack">
+        {nature === "museum_of_us" ? (
+          <>
+            <p className="nature-tag">Museum of Us</p>
+            <label className="stack">
+              <span className="field-label">
+                Title ({title.length}/{museum.titleMaxChars})
+              </span>
+              <input
+                value={title}
+                onChange={(e) =>
+                  setTitle(e.target.value.slice(0, museum.titleMaxChars))
+                }
+                maxLength={museum.titleMaxChars}
+                required={museum.requireTitle}
+                placeholder="For us"
+              />
+            </label>
+            <label className="stack">
+              <span className="field-label">
+                Heartfelt message ({messageWords}/{museum.messageMaxWords} words)
+              </span>
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                rows={4}
+                required={museum.requireMessage}
+                placeholder="Write something they’ll keep"
+              />
+            </label>
+            <UploadField
+              kind="customer_image"
+              label={`Custom photos (min ${museum.minImages})`}
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              maxFiles={Math.max(museum.minImages, 12)}
+              onKeysChange={setImageKeys}
             />
-          </label>
-          <label className="stack">
-            <span>
-              Heartfelt message ({messageWords}/{museum.messageMaxWords} words)
-            </span>
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              rows={4}
-              required={museum.requireMessage}
+          </>
+        ) : null}
+
+        {nature === "f1_pick_and_go" ? (
+          <>
+            <p className="nature-tag">F1 pick and go</p>
+            <p className="lead" style={{ marginBottom: 0 }}>
+              No custom text or photos — this option ships as selected.
+            </p>
+          </>
+        ) : null}
+
+        {nature === "graduation_lego_frame" ? (
+          <>
+            <p className="nature-tag">Graduation Lego Frame</p>
+            <fieldset style={{ border: 0, margin: 0, padding: 0 }}>
+              <legend className="field-label" style={{ marginBottom: "0.65rem" }}>
+                Choose exactly one Lego variant
+              </legend>
+              <div className="variant-grid">
+                {(graduation.variants ?? []).map((v) => (
+                  <label
+                    key={v.key}
+                    className="variant-card"
+                    data-selected={legoVariant === v.key}
+                  >
+                    <input
+                      type="radio"
+                      name="legoVariantUi"
+                      checked={legoVariant === v.key}
+                      onChange={() => setLegoVariant(v.key)}
+                    />
+                    {v.imageKey ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={`/api/media?key=${encodeURIComponent(v.imageKey)}`}
+                        alt=""
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = "none";
+                          const fallback = (e.target as HTMLImageElement)
+                            .nextElementSibling as HTMLElement | null;
+                          if (fallback) fallback.style.display = "grid";
+                        }}
+                      />
+                    ) : null}
+                    <div
+                      className="variant-fallback"
+                      style={{ display: v.imageKey ? "none" : "grid" }}
+                    >
+                      {v.label.slice(0, 1)}
+                    </div>
+                    <span>{v.label}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+            <UploadField
+              kind="customer_image"
+              label={`Optional photo (+${senToRm(graduation.optionalImageSurchargeSen ?? 500)}) — max 1`}
+              accept="image/jpeg,image/png,image/webp"
+              maxFiles={1}
+              onKeysChange={setGradImageKeys}
             />
-          </label>
-          <UploadField
-            kind="customer_image"
-            label={`Custom photos (min ${museum.minImages})`}
-            accept="image/jpeg,image/png,image/webp"
-            multiple
-            maxFiles={Math.max(museum.minImages, 12)}
-            onKeysChange={setImageKeys}
-          />
-        </>
-      ) : null}
+          </>
+        ) : null}
+      </div>
 
-      {nature === "f1_pick_and_go" ? (
-        <p className="muted">Pick &amp; go — no custom text or photos. Ready to order.</p>
-      ) : null}
-
-      {nature === "graduation_lego_frame" ? (
-        <>
-          <fieldset className="stack">
-            <legend>Choose exactly one Lego variant</legend>
-            {(graduation.variants ?? []).map((v) => (
-              <label key={v.key} style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-                <input
-                  type="radio"
-                  name="legoVariantUi"
-                  checked={legoVariant === v.key}
-                  onChange={() => setLegoVariant(v.key)}
-                />
-                <span>{v.label}</span>
-                {v.imageKey ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={`/api/media?key=${encodeURIComponent(v.imageKey)}`}
-                    alt={v.label}
-                    width={48}
-                    height={48}
-                    style={{ objectFit: "cover", borderRadius: 6 }}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = "none";
-                    }}
-                  />
-                ) : null}
-              </label>
-            ))}
-          </fieldset>
-          <UploadField
-            kind="customer_image"
-            label={`Optional photo (+${senToRm(graduation.optionalImageSurchargeSen ?? 500)}) — max 1`}
-            accept="image/jpeg,image/png,image/webp"
-            maxFiles={1}
-            onKeysChange={setGradImageKeys}
-          />
-        </>
-      ) : null}
-
-      <div className="panel stack">
-        <strong>Price</strong>
-        <p>Base {senToRm(unitPriceSen)}</p>
-        {surchargeSen ? <p>Optional image {senToRm(surchargeSen)}</p> : null}
-        <p>
-          Subtotal now <strong>{senToRm(unitPriceSen + surchargeSen)}</strong>
-          <span className="muted"> (+ shipping at checkout)</span>
+      <div className="price-board">
+        <div className="row">
+          <span>Base</span>
+          <span>{senToRm(unitPriceSen)}</span>
+        </div>
+        {surchargeSen ? (
+          <div className="row">
+            <span>Optional image</span>
+            <span>{senToRm(surchargeSen)}</span>
+          </div>
+        ) : null}
+        <div className="row total">
+          <span>Subtotal</span>
+          <span>{senToRm(unitPriceSen + surchargeSen)}</span>
+        </div>
+        <p className="muted" style={{ margin: "0.35rem 0 0", color: "#a9cbbd", fontSize: "0.8rem" }}>
+          Shipping calculated at checkout
         </p>
       </div>
 

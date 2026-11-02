@@ -26,63 +26,89 @@ export default async function AdminProductEditPage({
   if (!product) notFound();
 
   return (
-    <PageShell title={product.name} lead={`Edit ${product.slug}`}>
-      <p>
-        <Link href={`/admin/products/${product.id}/subs`}>Manage sub-products →</Link>
+    <PageShell kicker="Edit product" title={product.name} lead={`Slug ${product.slug}`}>
+      <p style={{ marginTop: "-0.5rem" }}>
+        <Link className="button secondary" href={`/admin/products/${product.id}/subs`}>
+          Manage sub-products
+        </Link>
       </p>
       {product.heroImageKey ? (
-        <div className="panel" style={{ marginBottom: "1rem" }}>
+        <div className="panel" style={{ marginBottom: "1rem", maxWidth: 360 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={`/api/media?key=${encodeURIComponent(product.heroImageKey)}`}
             alt={`${product.name} hero`}
-            style={{ maxWidth: "min(320px, 100%)" }}
+            style={{ width: "100%", borderRadius: "0.55rem" }}
           />
         </div>
       ) : null}
       <AdminActionForm action={upsertProductAction}>
         <input type="hidden" name="id" value={product.id} />
-        <label className="stack">
-          <span>Slug</span>
-          <input name="slug" required defaultValue={product.slug} />
-        </label>
-        <label className="stack">
-          <span>Name</span>
-          <input name="name" required defaultValue={product.name} />
-        </label>
-        <label className="stack">
-          <span>Description</span>
-          <textarea name="description" rows={3} defaultValue={product.description} />
-        </label>
-        <label className="stack">
-          <span>Nature</span>
-          <select name="nature" required defaultValue={product.nature}>
-            {PRODUCT_NATURES.map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="stack">
-          <span>Badge (e.g. HOT!)</span>
-          <input name="badgeText" defaultValue={product.badgeText ?? ""} />
-        </label>
-        <MediaKeyField
-          name="heroImageKey"
-          kind="product_hero"
-          label="Hero image"
-          defaultKey={product.heroImageKey ?? ""}
-          productId={product.id}
-        />
-        <label className="stack">
-          <span>Sort order</span>
-          <input name="sortOrder" type="number" defaultValue={product.sortOrder} />
-        </label>
-        <label style={{ display: "flex", gap: "0.5rem" }}>
-          <input name="isActive" type="checkbox" defaultChecked={product.isActive} />{" "}
-          Active
-        </label>
+        <div className="form-grid">
+          <label className="stack">
+            <span className="field-label">Slug</span>
+            <input name="slug" required defaultValue={product.slug} />
+          </label>
+          <label className="stack">
+            <span className="field-label">Name</span>
+            <input name="name" required defaultValue={product.name} />
+          </label>
+          <label className="stack span-2">
+            <span className="field-label">Description</span>
+            <textarea
+              name="description"
+              rows={3}
+              defaultValue={product.description}
+            />
+          </label>
+          <label className="stack">
+            <span className="field-label">Nature</span>
+            <select name="nature" required defaultValue={product.nature}>
+              {PRODUCT_NATURES.map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="stack">
+            <span className="field-label">Badge (e.g. HOT!)</span>
+            <input name="badgeText" defaultValue={product.badgeText ?? ""} />
+          </label>
+          <label className="stack">
+            <span className="field-label">Sort order</span>
+            <input
+              name="sortOrder"
+              type="number"
+              defaultValue={product.sortOrder}
+            />
+          </label>
+          <label
+            className="stack"
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: "0.5rem",
+            }}
+          >
+            <input
+              name="isActive"
+              type="checkbox"
+              defaultChecked={product.isActive}
+            />{" "}
+            Active
+          </label>
+          <div className="span-2">
+            <MediaKeyField
+              name="heroImageKey"
+              kind="product_hero"
+              label="Hero image"
+              defaultKey={product.heroImageKey ?? ""}
+              productId={product.id}
+            />
+          </div>
+        </div>
       </AdminActionForm>
     </PageShell>
   );

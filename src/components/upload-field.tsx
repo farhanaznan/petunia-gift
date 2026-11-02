@@ -40,6 +40,7 @@ export function UploadField({
   const [keys, setKeys] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dragging, setDragging] = useState(false);
 
   async function onChange(files: FileList | null) {
     if (!files?.length) return;
@@ -85,13 +86,26 @@ export function UploadField({
       setError(e instanceof Error ? e.message : "Upload failed");
     } finally {
       setBusy(false);
+      setDragging(false);
     }
   }
 
   return (
     <div className="stack">
-      <label className="stack">
-        <span>{label}</span>
+      <span className="field-label">{label}</span>
+      <label
+        className={`dropzone${dragging ? " is-dragging" : ""}`}
+        onDragEnter={(e) => {
+          e.preventDefault();
+          setDragging(true);
+        }}
+        onDragOver={(e) => e.preventDefault()}
+        onDragLeave={() => setDragging(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          void onChange(e.dataTransfer.files);
+        }}
+      >
         <input
           type="file"
           accept={accept}
@@ -99,19 +113,29 @@ export function UploadField({
           disabled={busy}
           onChange={(e) => onChange(e.target.files)}
         />
+        <span className="dropzone-title">
+          {busy ? "Uploading…" : "Drop files here or tap to browse"}
+        </span>
+        <p className="dropzone-hint">
+          {multiple ? `Up to ${maxFiles ?? 12} files` : "One file"} · JPEG / PNG / WebP
+          {kind === "receipt" ? " / PDF" : ""} · max 10MB
+        </p>
       </label>
-      {busy ? <p className="muted">Uploading…</p> : null}
       {error ? (
         <p className="form-error" role="alert">
           {error}
         </p>
       ) : null}
       {keys.length ? (
-        <ul className="route-list">
+        <ul className="upload-list">
           {keys.map((key) => (
             <li key={key}>
-              <a href={`/api/media?key=${encodeURIComponent(key)}`} target="_blank" rel="noreferrer">
-                Uploaded ✓
+              <a
+                href={`/api/media?key=${encodeURIComponent(key)}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Uploaded — preview
               </a>
             </li>
           ))}

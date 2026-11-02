@@ -32,101 +32,141 @@ export default async function AdminOrderDetailPage({
 
   return (
     <PageShell
+      kicker="Order detail"
       title={order.publicRef}
-      lead={`${row.productName} · ${row.subName} · ${order.status}`}
+      lead={`${row.productName} · ${row.subName} · ${order.status.replaceAll("_", " ")}`}
     >
-      <div className="panel stack">
-        <p>
-          Item {senToRm(order.unitPriceSen)} · surcharge {senToRm(order.surchargeSen)} ·
-          shipping {senToRm(order.shippingFeeSen)} ·{" "}
-          <strong>total {senToRm(order.totalSen)}</strong>
-        </p>
-        <p>Ship date: {order.shipDate}</p>
-        <p>
-          {order.buyerName} · {order.email}
-        </p>
-        <p>
-          Customer phone {order.customerPhone} · Recipient phone {order.recipientPhone}
-        </p>
-        <p>
-          {order.addressLine1}
-          {order.addressLine2 ? `, ${order.addressLine2}` : ""}, {order.postcode}{" "}
-          {order.city}, {order.state}, {order.country}
-        </p>
-      </div>
+      <div className="checkout-layout">
+        <div className="stack">
+          <div className="panel elevated stack">
+            <p className="nature-tag">Customer &amp; delivery</p>
+            <p style={{ margin: 0 }}>
+              <strong>{order.buyerName}</strong> · {order.email}
+            </p>
+            <p className="muted" style={{ margin: 0 }}>
+              Customer {order.customerPhone} · Recipient {order.recipientPhone}
+            </p>
+            <p style={{ margin: 0 }}>
+              {order.addressLine1}
+              {order.addressLine2 ? `, ${order.addressLine2}` : ""},{" "}
+              {order.postcode} {order.city}, {order.state}, {order.country}
+            </p>
+            <p className="muted" style={{ margin: 0 }}>
+              Ship date {order.shipDate}
+            </p>
+          </div>
 
-      <div className="panel stack" style={{ marginTop: "1rem" }}>
-        <h2 style={{ margin: 0, fontSize: "1.1rem" }}>Customization</h2>
-        <pre style={{ whiteSpace: "pre-wrap", fontSize: "0.85rem", margin: 0 }}>
-          {JSON.stringify(order.customization, null, 2)}
-        </pre>
-        {"imageKeys" in (order.customization as object) ? (
-          <ul className="route-list">
-            {((order.customization as { imageKeys?: string[] }).imageKeys ?? []).map(
-              (key) => (
-                <li key={key}>
+          <div className="panel elevated stack">
+            <p className="nature-tag">Customization</p>
+            <pre
+              style={{
+                whiteSpace: "pre-wrap",
+                fontSize: "0.85rem",
+                margin: 0,
+                fontFamily: "var(--font-body), sans-serif",
+              }}
+            >
+              {JSON.stringify(order.customization, null, 2)}
+            </pre>
+            {"imageKeys" in (order.customization as object) ? (
+              <ul className="upload-list">
+                {((order.customization as { imageKeys?: string[] }).imageKeys ?? []).map(
+                  (key) => (
+                    <li key={key}>
+                      <a
+                        href={`/api/media?key=${encodeURIComponent(key)}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Customer image
+                      </a>
+                    </li>
+                  ),
+                )}
+              </ul>
+            ) : null}
+          </div>
+
+          <div className="panel elevated stack">
+            <p className="nature-tag">Receipt</p>
+            {order.receiptKey ? (
+              <>
+                <p className="muted" style={{ margin: 0 }}>
+                  <code>{order.receiptKey}</code>
+                </p>
+                {order.receiptKey.endsWith(".pdf") ? (
                   <a
-                    href={`/api/media?key=${encodeURIComponent(key)}`}
+                    className="button secondary"
+                    href={`/api/media?key=${encodeURIComponent(order.receiptKey)}`}
                     target="_blank"
                     rel="noreferrer"
                   >
-                    Customer image
+                    Open PDF receipt
                   </a>
-                </li>
-              ),
-            )}
-          </ul>
-        ) : null}
-      </div>
-
-      <div className="panel stack" style={{ marginTop: "1rem" }}>
-        <h2 style={{ margin: 0, fontSize: "1.1rem" }}>Receipt</h2>
-        {order.receiptKey ? (
-          <>
-            <p className="muted">
-              <code>{order.receiptKey}</code>
-            </p>
-            {order.receiptKey.endsWith(".pdf") ? (
-              <a
-                className="button secondary"
-                href={`/api/media?key=${encodeURIComponent(order.receiptKey)}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Open PDF receipt
-              </a>
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={`/api/media?key=${encodeURIComponent(order.receiptKey)}`}
+                    alt="Payment receipt"
+                    style={{
+                      maxWidth: "min(420px, 100%)",
+                      background: "#fff",
+                      borderRadius: "0.55rem",
+                    }}
+                  />
+                )}
+              </>
             ) : (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={`/api/media?key=${encodeURIComponent(order.receiptKey)}`}
-                alt="Payment receipt"
-                style={{ maxWidth: "min(420px, 100%)", background: "#fff" }}
-              />
+              <p className="muted" style={{ margin: 0 }}>
+                No receipt uploaded yet.
+              </p>
             )}
-          </>
-        ) : (
-          <p className="muted">No receipt uploaded yet.</p>
-        )}
-      </div>
+          </div>
+        </div>
 
-      <h2 style={{ marginTop: "1.5rem" }}>Update status</h2>
-      <AdminActionForm action={updateOrderStatusAction} submitLabel="Update order">
-        <input type="hidden" name="id" value={order.id} />
-        <label className="stack">
-          <span>Status</span>
-          <select name="status" defaultValue={order.status}>
-            <option value="pending_payment_review">pending_payment_review</option>
-            <option value="confirmed">confirmed</option>
-            <option value="rejected">rejected</option>
-            <option value="cancelled">cancelled</option>
-            <option value="done">done</option>
-          </select>
-        </label>
-        <label className="stack">
-          <span>Admin notes</span>
-          <textarea name="adminNotes" rows={3} defaultValue={order.adminNotes ?? ""} />
-        </label>
-      </AdminActionForm>
+        <aside className="checkout-summary stack">
+          <div className="price-board">
+            <div className="row">
+              <span>Item</span>
+              <span>{senToRm(order.unitPriceSen)}</span>
+            </div>
+            <div className="row">
+              <span>Surcharge</span>
+              <span>{senToRm(order.surchargeSen)}</span>
+            </div>
+            <div className="row">
+              <span>Shipping</span>
+              <span>{senToRm(order.shippingFeeSen)}</span>
+            </div>
+            <div className="row total">
+              <span>Total</span>
+              <span>{senToRm(order.totalSen)}</span>
+            </div>
+          </div>
+
+          <AdminActionForm action={updateOrderStatusAction} submitLabel="Update order">
+            <input type="hidden" name="id" value={order.id} />
+            <label className="stack">
+              <span className="field-label">Status</span>
+              <select name="status" defaultValue={order.status}>
+                <option value="pending_payment_review">pending_payment_review</option>
+                <option value="confirmed">confirmed</option>
+                <option value="rejected">rejected</option>
+                <option value="cancelled">cancelled</option>
+                <option value="done">done</option>
+              </select>
+            </label>
+            <label className="stack">
+              <span className="field-label">Admin notes</span>
+              <textarea
+                name="adminNotes"
+                rows={3}
+                defaultValue={order.adminNotes ?? ""}
+              />
+            </label>
+          </AdminActionForm>
+        </aside>
+      </div>
     </PageShell>
   );
 }

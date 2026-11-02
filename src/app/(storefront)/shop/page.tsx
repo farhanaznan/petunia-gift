@@ -11,14 +11,15 @@ export default async function ShopPage() {
 
   return (
     <PageShell
+      kicker="Collections"
       title="Shop"
       lead={
         products.length
-          ? "Handmade gifts for Malaysia delivery — choose a collection to customise."
+          ? "Choose a collection, pick your option, personalise where needed, then reserve a ship date."
           : "Catalog is empty. Run npm run db:seed-catalog after Neon is linked."
       }
     >
-      <ul className="route-list">
+      <ul className="product-rail">
         {await Promise.all(
           products.map(async (product) => {
             const subs = await listSubsForProduct(product.id);
@@ -28,31 +29,34 @@ export default async function ShopPage() {
             }, null);
             return (
               <li key={product.id}>
-                <Link href={`/shop/${product.slug}`} style={{ display: "grid", gap: "0.5rem" }}>
-                  {product.heroImageKey ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={`/api/media?key=${encodeURIComponent(product.heroImageKey)}`}
-                      alt=""
-                      style={{
-                        width: "100%",
-                        maxWidth: 360,
-                        aspectRatio: "4 / 3",
-                        objectFit: "cover",
-                        borderRadius: 8,
-                      }}
-                    />
-                  ) : null}
-                  <span>
-                    <strong>{product.name}</strong>
-                    {product.badgeText ? ` · ${product.badgeText}` : ""}
-                  </span>
+                <Link className="product-link" href={`/shop/${product.slug}`}>
+                  <div>
+                    {product.heroImageKey ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        className="product-link-media"
+                        src={`/api/media?key=${encodeURIComponent(product.heroImageKey)}`}
+                        alt=""
+                      />
+                    ) : null}
+                    <p className="nature-tag">
+                      {product.nature.replaceAll("_", " ")}
+                    </p>
+                    <h2 className="product-link-title">
+                      {product.name}
+                      {product.badgeText ? (
+                        <span className="badge">{product.badgeText}</span>
+                      ) : null}
+                    </h2>
+                    <p className="product-link-meta">
+                      {product.description}
+                      {subs.length ? ` · ${subs.length} option${subs.length === 1 ? "" : "s"}` : ""}
+                    </p>
+                  </div>
+                  <div className="product-link-price">
+                    {from != null ? `from ${senToRm(from)}` : "View"}
+                  </div>
                 </Link>
-                <div className="muted">
-                  {product.description}
-                  {from != null ? ` · from ${senToRm(from)}` : ""}
-                  {subs.length ? ` · ${subs.length} option(s)` : ""}
-                </div>
               </li>
             );
           }),

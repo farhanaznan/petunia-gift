@@ -41,22 +41,55 @@ export default async function AdminCapacityPage() {
 
   return (
     <PageShell
-      title="Capacity calendar"
-      lead="Max orders per ship date × sub-product."
+      kicker="Capacity"
+      title="Ship-date calendar"
+      lead="Set max orders per ship date for each sub-product. Closed slots disappear from checkout."
     >
-      <ul className="route-list">
-        {slots.map((s) => (
-          <li key={s.id}>
-            {s.shipDate} · {s.productName} / {s.subName} · max {s.maxOrders}
-            {s.isOpen ? "" : " · closed"}
-          </li>
-        ))}
-      </ul>
+      <div style={{ overflowX: "auto", marginBottom: "1.5rem" }}>
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Ship date</th>
+              <th>Product</th>
+              <th>Sub-product</th>
+              <th>Max</th>
+              <th>State</th>
+            </tr>
+          </thead>
+          <tbody>
+            {slots.map((s) => (
+              <tr key={s.id}>
+                <td>{s.shipDate}</td>
+                <td>{s.productName}</td>
+                <td>{s.subName}</td>
+                <td>{s.maxOrders}</td>
+                <td>
+                  <span
+                    className="status-pill"
+                    data-tone={s.isOpen ? "ok" : "danger"}
+                  >
+                    {s.isOpen ? "open" : "closed"}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {!slots.length ? <p className="muted">No capacity slots yet.</p> : null}
 
-      <h2 style={{ marginTop: "2rem" }}>Add / update slot</h2>
+      <h2
+        style={{
+          fontFamily: "var(--font-display), sans-serif",
+          letterSpacing: "-0.03em",
+          fontSize: "1.4rem",
+        }}
+      >
+        Add / update slot
+      </h2>
       <AdminActionForm action={upsertCapacityAction}>
         <label className="stack">
-          <span>Sub-product</span>
+          <span className="field-label">Sub-product</span>
           <select name="subProductId" required defaultValue="">
             <option value="" disabled>
               Select
@@ -68,16 +101,18 @@ export default async function AdminCapacityPage() {
             ))}
           </select>
         </label>
-        <label className="stack">
-          <span>Ship date</span>
-          <input name="shipDate" type="date" required />
-        </label>
-        <label className="stack">
-          <span>Max orders</span>
-          <input name="maxOrders" type="number" min={1} defaultValue={10} required />
-        </label>
-        <label style={{ display: "flex", gap: "0.5rem" }}>
-          <input name="isOpen" type="checkbox" defaultChecked /> Open
+        <div className="form-grid">
+          <label className="stack">
+            <span className="field-label">Ship date</span>
+            <input name="shipDate" type="date" required />
+          </label>
+          <label className="stack">
+            <span className="field-label">Max orders</span>
+            <input name="maxOrders" type="number" min={1} defaultValue={10} required />
+          </label>
+        </div>
+        <label style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+          <input name="isOpen" type="checkbox" defaultChecked /> Open for checkout
         </label>
       </AdminActionForm>
     </PageShell>

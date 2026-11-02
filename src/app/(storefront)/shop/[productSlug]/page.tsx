@@ -22,7 +22,11 @@ export default async function ProductPage({
   const nature = natureRegistry[product.nature];
 
   return (
-    <PageShell title={product.name} lead={product.description}>
+    <PageShell
+      kicker={nature.label}
+      title={product.name}
+      lead={product.description}
+    >
       {product.heroImageKey ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -30,31 +34,48 @@ export default async function ProductPage({
           alt=""
           style={{
             width: "100%",
-            maxWidth: 520,
+            maxWidth: 720,
             aspectRatio: "16 / 9",
             objectFit: "cover",
-            borderRadius: 8,
-            marginBottom: "1rem",
+            borderRadius: "0.85rem",
+            marginBottom: "1.25rem",
           }}
         />
       ) : null}
-      <p className="muted">
-        Type: {nature.label}
-        {product.badgeText ? ` · ${product.badgeText}` : ""}
-      </p>
-      <ul className="route-list">
+
+      {product.badgeText ? (
+        <p>
+          <span className="badge">{product.badgeText}</span>
+        </p>
+      ) : null}
+
+      <div className="sub-picker" role="list">
         {subs.map((sub) => (
-          <li key={sub.id}>
-            <Link href={`/shop/${product.slug}/${sub.slug}`}>
-              {sub.name}
-              {sub.badgeText ? ` · ${sub.badgeText}` : ""} — {senToRm(sub.priceSen)}
-            </Link>
-            {sub.description ? (
-              <div className="muted">{sub.description}</div>
-            ) : null}
-          </li>
+          <Link
+            key={sub.id}
+            role="listitem"
+            className="sub-picker-item"
+            href={`/shop/${product.slug}/${sub.slug}`}
+          >
+            <div>
+              <strong>
+                {sub.name}
+                {sub.badgeText ? <span className="badge">{sub.badgeText}</span> : null}
+              </strong>
+              {sub.description ? (
+                <p className="product-link-meta" style={{ marginTop: "0.35rem" }}>
+                  {sub.description}
+                </p>
+              ) : (
+                <p className="product-link-meta" style={{ marginTop: "0.35rem" }}>
+                  Select to customise &amp; checkout
+                </p>
+              )}
+            </div>
+            <div className="product-link-price">{senToRm(sub.priceSen)}</div>
+          </Link>
         ))}
-      </ul>
+      </div>
     </PageShell>
   );
 }
