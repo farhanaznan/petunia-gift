@@ -21,15 +21,19 @@ Product natures: `museum_of_us` · `f1_pick_and_go` · `graduation_lego_frame`.
 ## Quick start (local)
 
 ```bash
-cp .env.example .env.local
-# set DATABASE_URL + SESSION_SECRET (+ optional ADMIN_SEED_*)
 npm install
-npm run db:push          # apply schema to Neon
-npm run db:seed-admin    # first admin from ADMIN_SEED_* 
+# Auth + link (once): neon login   OR   export NEON_API_KEY=…
+neon init -y --org-id <org> --project-id <project> --branch production --services postgres
+neon deploy                  # writes DATABASE_URL* into .env.local (gitignored)
+# also set SESSION_SECRET (+ optional ADMIN_SEED_*) in .env.local
+npm run db:push              # uses DATABASE_URL_UNPOOLED when present
+npm run db:seed-admin        # first admin from ADMIN_SEED_*
 npm run dev
 ```
 
-Open `http://localhost:3000/admin/login`.
+Open `http://localhost:3000/admin/login`. DB probe: `GET /api/health/db`.
+
+App queries use **pooled** `DATABASE_URL` via `@neondatabase/serverless` + Drizzle. Migrations use **direct** `DATABASE_URL_UNPOOLED`. Workers later: Hyperdrive + `pg`.
 
 ## Admin auth
 

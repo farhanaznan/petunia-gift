@@ -17,7 +17,8 @@ export class DatabaseNotConfiguredError extends Error {
 }
 
 /**
- * Neon HTTP client for local `next dev` and tooling via DATABASE_URL.
+ * Neon HTTP (pooled DATABASE_URL) — preferred for Next.js serverless / edge-style one-shot queries.
+ * See Neon skill: pooled for web apps; direct for migrations.
  */
 export function getDbFromDatabaseUrl(databaseUrl: string) {
   const sql = neon(databaseUrl);
@@ -25,7 +26,7 @@ export function getDbFromDatabaseUrl(databaseUrl: string) {
 }
 
 /**
- * Hyperdrive / TCP Postgres (Workers nodejs_compat) via `pg` Pool.
+ * TCP via `pg` — used with Cloudflare Hyperdrive (nodejs_compat) later.
  */
 export function getDbFromConnectionString(connectionString: string) {
   const pool = new Pool({ connectionString, max: 1 });
@@ -38,8 +39,8 @@ export function getDbFromHyperdrive(hyperdrive: { connectionString: string }) {
 
 /**
  * Resolve DB for server code:
- * 1) Cloudflare Hyperdrive binding
- * 2) DATABASE_URL / POSTGRES_URL (Neon HTTP)
+ * 1) Cloudflare Hyperdrive binding (Workers)
+ * 2) DATABASE_URL (Neon pooled) via serverless HTTP driver
  */
 export async function getDb(): Promise<AppDb> {
   const env = await getRuntimeEnv();
@@ -51,16 +52,11 @@ export async function getDb(): Promise<AppDb> {
 
   const url = env.DATABASE_URL || env.POSTGRES_URL;
   if (url) {
-    // Prefer TCP via pg when URL looks like standard postgres (works with Neon + Hyperdrive local).
-    // Neon pooled HTTP is fine for serverless without Hyperdrive.
-    if (url.includes("neon.tech") && !env.HYPERDRIVE) {
-      return getDbFromDatabaseUrl(url);
-    }
-    return getDbFromConnectionString(url);
+    return getDbFromDatabaseUrl(url);
   }
 
   throw new DatabaseNotConfiguredError(
-    "Set DATABASE_URL (local/Neon) or bind Hyperdrive (HYPERDRIVE) on Cloudflare",
+    "Set DATABASE_URL (Neon pooled) or bind Hyperdrive (HYPERDRIVE) on Cloudflare",
   );
 }
 
@@ -71,4 +67,15 @@ export async function tryGetDb(): Promise<AppDb | null> {
     if (error instanceof DatabaseNotConfiguredError) return null;
     throw error;
   }
+}
+
+/** Direct (unpooled) URL for migrations / admin tooling when available. */
+export function resolveMigrationDatabaseUrl(
+  env: NodeJS.ProcessEnv = process.env,
+): string | undefined {
+  return (
+    env.DATABASE_URL_UNPOOLED ||
+    env.DATABASE_URL ||
+    env.POSTGRES_URL
+  );
 }

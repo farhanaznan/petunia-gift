@@ -5,6 +5,8 @@ export {
   getDbFromDatabaseUrl,
   getDbFromConnectionString,
   getDbFromHyperdrive,
+  resolveMigrationDatabaseUrl,
   DatabaseNotConfiguredError,
   type AppDb,
 } from "./client";
+

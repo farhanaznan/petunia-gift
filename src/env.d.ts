@@ -1,6 +1,8 @@
 declare namespace NodeJS {
   interface ProcessEnv {
     DATABASE_URL?: string;
+    DATABASE_URL_UNPOOLED?: string;
+    NEON_BRANCH?: string;
     POSTGRES_URL?: string;
     SESSION_SECRET?: string;
     R2_ACCOUNT_ID?: string;
