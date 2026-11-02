@@ -36,19 +36,27 @@ npm run preview       # OpenNext build + Wrangler preview
 
 ## Deploy path (Cloudflare)
 
-1. Create **Neon** database; copy connection string into `.env` / Hyperdrive origin.
-2. Create **Hyperdrive** config in Cloudflare pointing at Neon → put id in `wrangler.jsonc` `hyperdrive[0].id`.
-3. Create private **R2** bucket `petunia-gift-media` (binding `MEDIA_BUCKET` already declared).
-4. Create R2 API tokens if you need browser **presigned** uploads (`R2_*` in secrets).
-5. Set Worker secrets: `SESSION_SECRET`, optional `ADMIN_SEED_*`.
-6. Deploy:
+### Shell-only staging (current `wrangler.jsonc`)
+
+Hyperdrive + R2 bindings are **omitted** so route shells can deploy without Neon/R2.
 
 ```bash
-npx wrangler login
+npx wrangler login   # or CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID
 npm run deploy
 ```
 
-Soft-launch on `*.workers.dev` (or a staging custom domain). Do **not** cut over `petunia-gift.com` until approved.
+Expect `https://petunia-gift.<subdomain>.workers.dev`. No live catalog, checkout, or media until full bindings return.
+
+### Full soft-launch (Neon + R2)
+
+1. Create **Neon** database; copy connection string into `.env` / Hyperdrive origin.
+2. Create **Hyperdrive** → put id in `wrangler.jsonc` `hyperdrive` binding.
+3. Create private **R2** bucket `petunia-gift-media` → `MEDIA_BUCKET` binding.
+4. Optional R2 S3 API tokens for browser **presigned** uploads (`R2_*` secrets).
+5. Set Worker secrets: `SESSION_SECRET`, optional `ADMIN_SEED_*`.
+6. `npm run deploy`
+
+Do **not** cut over `petunia-gift.com` until approved.
 
 ## R2 layout
 
