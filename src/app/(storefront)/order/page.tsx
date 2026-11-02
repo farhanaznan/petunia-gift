@@ -18,9 +18,11 @@ export default async function OrderPage() {
         title="Nothing in checkout yet"
         lead="Pick a product from the shop to begin."
       >
-        <Link className="button" href="/shop">
-          Browse shop
-        </Link>
+        <div className="cta-row">
+          <Link className="button" href="/shop">
+            Browse shop
+          </Link>
+        </div>
       </PageShell>
     );
   }
@@ -33,15 +35,16 @@ export default async function OrderPage() {
       title="Delivery details"
       lead={`${cart.productName} · ${cart.subName} · ${senToRm(cart.unitPriceSen)}${cart.surchargeSen ? ` + ${senToRm(cart.surchargeSen)}` : ""}`}
     >
-      <div className="panel" style={{ marginBottom: "1.25rem" }}>
+      <div className="panel" style={{ marginBottom: "1.5rem", maxWidth: 520, marginInline: "auto" }}>
         <p className="nature-tag">{cart.nature.replaceAll("_", " ")}</p>
         <pre
           style={{
             whiteSpace: "pre-wrap",
-            fontSize: "0.85rem",
+            fontSize: "0.82rem",
             margin: 0,
             fontFamily: "var(--font-body), sans-serif",
             color: "var(--muted)",
+            textAlign: "left",
           }}
         >
           {JSON.stringify(cart.customization, null, 2)}

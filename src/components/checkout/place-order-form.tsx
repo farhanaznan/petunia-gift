@@ -41,7 +41,7 @@ export function PlaceOrderForm({
 
   return (
     <form action={action} className="checkout-layout">
-      <div className="panel elevated stack">
+      <div className="panel stack">
         <div className="stack">
           <span className="field-label">Ship date (open capacity only)</span>
           <input type="hidden" name="shipDate" value={shipDate} required />
@@ -161,10 +161,7 @@ export function PlaceOrderForm({
             <span>Total</span>
             <span>{total == null ? "Select state" : senToRm(total)}</span>
           </div>
-          <p
-            className="muted"
-            style={{ margin: "0.45rem 0 0", color: "#a9cbbd", fontSize: "0.78rem" }}
-          >
+          <p className="muted" style={{ margin: "0.45rem 0 0", fontSize: "0.78rem" }}>
             Peninsular {senToRm(SHIPPING_FEE_SEN.peninsular)} · East MY{" "}
             {senToRm(SHIPPING_FEE_SEN.east)}
           </p>

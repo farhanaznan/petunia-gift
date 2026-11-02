@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProductTile } from "@/components/gallery/product-tile";
 import { listActiveProducts, listSubsForProduct } from "@/lib/catalog/queries";
 import { senToRm } from "@/lib/money";
 
@@ -6,62 +7,66 @@ export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const products = await listActiveProducts();
-  const featured = products.slice(0, 3);
+  const heroImage =
+    products.find((p) => p.heroImageKey)?.heroImageKey ?? null;
+
+  const tiles = await Promise.all(
+    products.map(async (p, index) => {
+      const subs = await listSubsForProduct(p.id);
+      const from = subs.reduce<number | null>((min, s) => {
+        if (min == null || s.priceSen < min) return s.priceSen;
+        return min;
+      }, null);
+      return {
+        product: p,
+        from,
+        tall: index % 3 === 1,
+      };
+    }),
+  );
 
   return (
-    <>
-      <section className="hero">
-        <div className="hero-inner">
-          <p className="brand-mark">Petunia Gift</p>
-          <h1>Handmade gifts, made for Malaysia.</h1>
-          <p className="lead">
-            Personalised frames and collectibles — choose a ship date, pay with
-            Touch &apos;n Go QR, upload your receipt.
-          </p>
-          <div className="cta-row">
-            <Link className="button" href="/shop">
-              Browse the shop
-            </Link>
-            <Link className="button secondary" href="/faq">
-              How ordering works
-            </Link>
-          </div>
+    <div className="page-column" style={{ paddingBottom: "2rem" }}>
+      <section className="gallery-hero" aria-label="Featured">
+        {heroImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={`/api/media?key=${encodeURIComponent(heroImage)}`} alt="" />
+        ) : (
+          <div className="gallery-hero-placeholder" aria-hidden />
+        )}
+        <div className="gallery-hero-overlay">
+          <p className="gallery-hero-kicker">Handmade for Malaysia</p>
+          <p className="gallery-hero-script">Petunia Gift</p>
         </div>
       </section>
 
-      {featured.length ? (
-        <section className="home-featured">
-          <h2>Start with a collection</h2>
-          <ul className="product-rail">
-            {await Promise.all(
-              featured.map(async (p) => {
-                const subs = await listSubsForProduct(p.id);
-                const from = subs.reduce<number | null>((min, s) => {
-                  if (min == null || s.priceSen < min) return s.priceSen;
-                  return min;
-                }, null);
-                return (
-                  <li key={p.id}>
-                    <Link className="product-link" href={`/shop/${p.slug}`}>
-                      <div>
-                        <p className="nature-tag">{p.nature.replaceAll("_", " ")}</p>
-                        <h3 className="product-link-title">
-                          {p.name}
-                          {p.badgeText ? <span className="badge">{p.badgeText}</span> : null}
-                        </h3>
-                        <p className="product-link-meta">{p.description}</p>
-                      </div>
-                      <div className="product-link-price">
-                        {from != null ? `from ${senToRm(from)}` : "View"}
-                      </div>
-                    </Link>
-                  </li>
-                );
-              }),
-            )}
-          </ul>
-        </section>
-      ) : null}
-    </>
+      <section className="home-featured" style={{ width: "100%", paddingTop: 0 }}>
+        <h2>The collection</h2>
+        {tiles.length ? (
+          <div className="masonry">
+            {tiles.map(({ product, from, tall }) => (
+              <ProductTile
+                key={product.id}
+                href={`/shop/${product.slug}`}
+                name={product.name}
+                line={product.description}
+                priceLabel={from != null ? `from ${senToRm(from)}` : "View"}
+                imageKey={product.heroImageKey}
+                badgeText={product.badgeText}
+                natureLabel={product.nature.replaceAll("_", " ")}
+                tall={tall}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="lead">Catalog is empty. Seed products to begin.</p>
+        )}
+        <div className="cta-row" style={{ marginTop: "0.5rem" }}>
+          <Link className="button secondary" href="/shop">
+            View all
+          </Link>
+        </div>
+      </section>
+    </div>
   );
 }

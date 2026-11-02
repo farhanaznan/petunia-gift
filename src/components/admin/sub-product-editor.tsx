@@ -164,7 +164,7 @@ export function SubProductEditor({
       </AdminActionForm>
 
       {editing ? (
-        <div className="panel elevated stack">
+        <div className="panel stack">
           <h3 style={{ margin: 0, fontSize: "1.05rem" }}>Gallery images</h3>
           <ul className="upload-list">
             {editing.images.map((img) => (

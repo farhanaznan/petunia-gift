@@ -82,7 +82,7 @@ export default async function AdminHomePage() {
       </div>
 
       {pending.length ? (
-        <div className="panel elevated stack" style={{ marginTop: "1.5rem" }}>
+        <div className="panel stack" style={{ marginTop: "1.5rem" }}>
           <strong>Needs review</strong>
           {pending.map((o) => (
             <Link key={o.id} href={`/admin/orders/${o.id}`}>

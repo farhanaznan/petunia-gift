@@ -67,7 +67,7 @@ export function NatureCustomizer({
       <input type="hidden" name="subSlug" value={subSlug} />
       <input type="hidden" name="customization" value={customizationJson} />
 
-      <div className="panel elevated stack">
+      <div className="panel stack">
         {nature === "museum_of_us" ? (
           <>
             <p className="nature-tag">Museum of Us</p>
@@ -187,7 +187,7 @@ export function NatureCustomizer({
           <span>Subtotal</span>
           <span>{senToRm(unitPriceSen + surchargeSen)}</span>
         </div>
-        <p className="muted" style={{ margin: "0.35rem 0 0", color: "#a9cbbd", fontSize: "0.8rem" }}>
+        <p className="muted" style={{ margin: "0.35rem 0 0", fontSize: "0.8rem" }}>
           Shipping calculated at checkout
         </p>
       </div>

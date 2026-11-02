@@ -19,7 +19,7 @@ export default async function AdminTngQrPage() {
       lead="Upload or replace the shared QR shown on the checkout payment step."
     >
       {row?.tngQrKey ? (
-        <div className="panel elevated stack" style={{ marginBottom: "1rem", maxWidth: 360 }}>
+        <div className="panel stack" style={{ marginBottom: "1rem", maxWidth: 360 }}>
           <p className="muted" style={{ margin: 0 }}>
             Current key: <code>{row.tngQrKey}</code>
           </p>

@@ -9,7 +9,7 @@ export default function ContactPage() {
       title="Say hello"
       lead="WhatsApp, email, and Instagram links will land from admin settings during soft launch."
     >
-      <div className="panel elevated" style={{ maxWidth: 480 }}>
+      <div className="panel" style={{ maxWidth: 480, marginInline: "auto", textAlign: "left" }}>
         <p className="muted" style={{ margin: 0 }}>
           For order issues, include your public order reference from the thank-you
           page.

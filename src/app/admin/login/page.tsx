@@ -15,7 +15,7 @@ export default async function AdminLoginPage({
 
   return (
     <div className="admin-login-page">
-      <div className="admin-login-card panel elevated stack">
+      <div className="admin-login-card panel stack">
         <p className="page-kicker">Petunia Ops</p>
         <h1
           style={{

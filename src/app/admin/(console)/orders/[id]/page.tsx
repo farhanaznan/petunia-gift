@@ -38,7 +38,7 @@ export default async function AdminOrderDetailPage({
     >
       <div className="checkout-layout">
         <div className="stack">
-          <div className="panel elevated stack">
+          <div className="panel stack">
             <p className="nature-tag">Customer &amp; delivery</p>
             <p style={{ margin: 0 }}>
               <strong>{order.buyerName}</strong> · {order.email}
@@ -56,7 +56,7 @@ export default async function AdminOrderDetailPage({
             </p>
           </div>
 
-          <div className="panel elevated stack">
+          <div className="panel stack">
             <p className="nature-tag">Customization</p>
             <pre
               style={{
@@ -87,7 +87,7 @@ export default async function AdminOrderDetailPage({
             ) : null}
           </div>
 
-          <div className="panel elevated stack">
+          <div className="panel stack">
             <p className="nature-tag">Receipt</p>
             {order.receiptKey ? (
               <>

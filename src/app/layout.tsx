@@ -1,17 +1,23 @@
 import type { Metadata } from "next";
-import { Manrope, Syne } from "next/font/google";
+import { Cormorant_Garamond, Great_Vibes, Jost } from "next/font/google";
 import "./globals.css";
 
-const display = Syne({
+const display = Cormorant_Garamond({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
 });
 
-const body = Manrope({
+const script = Great_Vibes({
+  variable: "--font-script",
+  subsets: ["latin"],
+  weight: ["400"],
+});
+
+const body = Jost({
   variable: "--font-body",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["300", "400", "500", "600"],
 });
 
 export const metadata: Metadata = {
@@ -30,7 +36,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${display.variable} ${body.variable} antialiased`}>
+      <body
+        className={`${display.variable} ${script.variable} ${body.variable} antialiased`}
+      >
         {children}
       </body>
     </html>

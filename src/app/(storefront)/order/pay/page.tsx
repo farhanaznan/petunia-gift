@@ -58,7 +58,10 @@ export default async function OrderPayPage({
       title="Pay with Touch ’n Go"
       lead={`Order ${order.publicRef} · total ${senToRm(order.totalSen)} · ${order.status.replaceAll("_", " ")}`}
     >
-      <div className="price-board" style={{ marginBottom: "1.25rem", maxWidth: 420 }}>
+      <div
+        className="price-board"
+        style={{ marginBottom: "1.5rem", maxWidth: 420, marginInline: "auto" }}
+      >
         <div className="row">
           <span>Item</span>
           <span>{senToRm(order.unitPriceSen)}</span>

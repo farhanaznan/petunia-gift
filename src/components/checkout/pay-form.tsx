@@ -30,7 +30,7 @@ export function PayForm({
     <div className="checkout-layout">
       <div className="stack">
         {qrKey ? (
-          <div className="panel elevated qr-stage">
+          <div className="panel qr-stage">
             <p className="nature-tag">Touch ’n Go</p>
             <p style={{ margin: 0 }}>
               Scan the QR, then upload your receipt image or PDF.
@@ -75,7 +75,7 @@ export function PayForm({
           </div>
         ) : null}
 
-        <form action={action} className="panel elevated stack">
+        <form action={action} className="panel stack">
           <input type="hidden" name="publicRef" value={publicRef} />
           <input type="hidden" name="statusToken" value={statusToken} />
           <input type="hidden" name="receiptKey" value={receiptKey} />

@@ -22,11 +22,7 @@ export default async function ProductPage({
   const nature = natureRegistry[product.nature];
 
   return (
-    <PageShell
-      kicker={nature.label}
-      title={product.name}
-      lead={product.description}
-    >
+    <PageShell kicker={nature.label} title={product.name} lead={product.description}>
       {product.heroImageKey ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -34,17 +30,22 @@ export default async function ProductPage({
           alt=""
           style={{
             width: "100%",
-            maxWidth: 720,
             aspectRatio: "16 / 9",
             objectFit: "cover",
-            borderRadius: "0.85rem",
-            marginBottom: "1.25rem",
+            marginBottom: "1.75rem",
+            background: "var(--placeholder)",
           }}
         />
-      ) : null}
+      ) : (
+        <div
+          className="masonry-placeholder"
+          style={{ aspectRatio: "16 / 9", marginBottom: "1.75rem" }}
+          aria-hidden
+        />
+      )}
 
       {product.badgeText ? (
-        <p>
+        <p style={{ textAlign: "center", marginTop: "-0.5rem" }}>
           <span className="badge">{product.badgeText}</span>
         </p>
       ) : null}
@@ -62,15 +63,9 @@ export default async function ProductPage({
                 {sub.name}
                 {sub.badgeText ? <span className="badge">{sub.badgeText}</span> : null}
               </strong>
-              {sub.description ? (
-                <p className="product-link-meta" style={{ marginTop: "0.35rem" }}>
-                  {sub.description}
-                </p>
-              ) : (
-                <p className="product-link-meta" style={{ marginTop: "0.35rem" }}>
-                  Select to customise &amp; checkout
-                </p>
-              )}
+              <p className="product-link-meta">
+                {sub.description || "Select to customise & checkout"}
+              </p>
             </div>
             <div className="product-link-price">{senToRm(sub.priceSen)}</div>
           </Link>

@@ -20,7 +20,7 @@ export default async function OrderThanksPage({
           : "We’ll confirm after reviewing your Touch ’n Go receipt."
       }
     >
-      <div className="panel elevated stack" style={{ maxWidth: 480 }}>
+      <div className="panel stack" style={{ maxWidth: 480, marginInline: "auto" }}>
         <p className="muted" style={{ margin: 0 }}>
           Soft launch: status updates are manual for now. Keep your reference
           handy if you message us.
