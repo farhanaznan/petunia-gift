@@ -1,0 +1,29 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "petunia-gift",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-11-02",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "enabled": true
+  },
+  // Neon Postgres via Hyperdrive — replace id after creating the Hyperdrive config.
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "REPLACE_WITH_HYPERDRIVE_ID",
+      "localConnectionString": "postgresql://postgres:postgres@127.0.0.1:5432/petunia_gift"
+    }
+  ],
+  // Private media: product images, customer photos, receipts, TnG QR. Keys only in Postgres.
+  "r2_buckets": [
+    {
+      "binding": "MEDIA_BUCKET",
+      "bucket_name": "petunia-gift-media"
+    }
+  ]
+}
