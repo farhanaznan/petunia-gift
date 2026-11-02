@@ -75,20 +75,16 @@ npm run db:seed-admin
 
 **2. Hyperdrive**
 
-1. Cloudflare dashboard → **Hyperdrive** → **Create configuration**
-2. Paste the Neon connection string → create
-3. Copy the Hyperdrive **id**
-4. In `wrangler.jsonc`, uncomment/add:
+Staging already uses Hyperdrive config id `9c36d08dbfe9498c868173af5a726a16` (`petunia-gift-neon`) in `wrangler.jsonc`.
 
-```jsonc
-"hyperdrive": [
-  {
-    "binding": "HYPERDRIVE",
-    "id": "<HYPERDRIVE_ID>",
-    "localConnectionString": "<same-neon-url>"
-  }
-]
+To recreate elsewhere:
+
+```bash
+npx wrangler hyperdrive create petunia-gift-neon \
+  --connection-string "$DATABASE_URL_UNPOOLED"
 ```
+
+Put the printed id into `wrangler.jsonc` `hyperdrive[0].id`.
 
 **3. Secrets**
 
