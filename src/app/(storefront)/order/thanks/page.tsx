@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { PageShell } from "@/components/page-shell";
 
 export const metadata = { title: "Thank you" };
@@ -18,7 +19,10 @@ export default async function OrderThanksPage({
           : "We’ll confirm after reviewing your Touch ’n Go receipt."
       }
     >
-      <p className="muted">Status updates are manual for soft launch (WhatsApp / email later).</p>
+      <p className="muted">Soft launch: status updates are manual for now.</p>
+      <Link className="button secondary" href="/shop">
+        Back to shop
+      </Link>
     </PageShell>
   );
 }

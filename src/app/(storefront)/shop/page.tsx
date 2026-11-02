@@ -1,36 +1,44 @@
 import Link from "next/link";
 import { PageShell } from "@/components/page-shell";
-import { listNatures, natureRegistry } from "@/lib/natures/registry";
+import { listActiveProducts } from "@/lib/catalog/queries";
+import { senToRm } from "@/lib/money";
+import { listSubsForProduct } from "@/lib/catalog/queries";
 
 export const metadata = { title: "Shop" };
+export const dynamic = "force-dynamic";
 
-export default function ShopPage() {
-  const natures = listNatures();
+export default async function ShopPage() {
+  const products = await listActiveProducts();
 
   return (
     <PageShell
       title="Shop"
-      lead="Main products will load from Neon once seeded. Nature registry is wired for MVP."
+      lead={
+        products.length
+          ? "Handmade gifts for Malaysia delivery — choose a collection to customise."
+          : "Catalog is empty. Run npm run db:seed-catalog after Neon is linked."
+      }
     >
       <ul className="route-list">
-        {natures.map((nature) => {
-          const mod = natureRegistry[nature];
-          return (
-            <li key={nature}>
-              <strong>{mod.label}</strong>
-              <span className="muted"> — {mod.description}</span>
-            </li>
-          );
-        })}
+        {await Promise.all(
+          products.map(async (product) => {
+            const subs = await listSubsForProduct(product.id);
+            const from = subs[0]?.priceSen;
+            return (
+              <li key={product.id}>
+                <Link href={`/shop/${product.slug}`}>
+                  <strong>{product.name}</strong>
+                  {product.badgeText ? ` · ${product.badgeText}` : ""}
+                </Link>
+                <div className="muted">
+                  {product.description}
+                  {from != null ? ` · from ${senToRm(from)}` : ""}
+                </div>
+              </li>
+            );
+          }),
+        )}
       </ul>
-      <p className="muted" style={{ marginTop: "1.5rem" }}>
-        Example detail shells:{" "}
-        <Link href="/shop/museum-of-us">/shop/museum-of-us</Link>
-        {" · "}
-        <Link href="/shop/museum-of-us/museum-convo">
-          /shop/museum-of-us/museum-convo
-        </Link>
-      </p>
     </PageShell>
   );
 }

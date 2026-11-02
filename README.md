@@ -136,12 +136,17 @@ payments/tng-qr/{version}.{ext}
 - Working admin login gate + seed path
 - Nature registry + R2 helpers + storefront/admin shells
 
-## Next
+## Phase 1 storefront + admin
 
-- Catalog seed (Museum / F1 / Graduation)
-- Typed customizers + checkout (capacity, MY address, TnG + receipt)
-- Admin CRUD / capacity / receipt review
+```bash
+npm run db:seed-catalog   # Museum / F1 / Graduation + capacity dates
+```
+
+Live paths: shop from DB · nature customizers · MY checkout + capacity hold · TnG pay + receipt key · admin products/subs/capacity/orders/QR.
+
+R2 browser upload: `POST /api/uploads/presign` (needs R2 secrets + bucket `petunia-gift-media`). Until then, paste storage keys in forms.
 
 ## Repo
 
 https://github.com/farhanaznan/petunia-gift
+

@@ -13,6 +13,8 @@ async function seedAction(
   _prev: LoginState,
   _formData: FormData,
 ): Promise<LoginState> {
+  void _prev;
+  void _formData;
   return seedFirstAdminAction();
 }
 

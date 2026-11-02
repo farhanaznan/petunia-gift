@@ -209,7 +209,9 @@ a:hover {
   background: color-mix(in oklab, white 70%, transparent);
 }
 
-.panel input {
+.panel input,
+.panel select,
+.panel textarea {
   width: 100%;
   padding: 0.55rem 0.7rem;
   border: 1px solid var(--line);
@@ -217,6 +219,10 @@ a:hover {
   background: #fff;
   color: var(--ink);
   font: inherit;
+}
+
+.panel textarea {
+  resize: vertical;
 }
 
 .form-error {

@@ -1,5 +1,11 @@
-import Link from "next/link";
+import { notFound } from "next/navigation";
+import { NatureCustomizer } from "@/components/customizers/nature-customizer";
 import { PageShell } from "@/components/page-shell";
+import { getSubBySlugs } from "@/lib/catalog/queries";
+import { senToRm } from "@/lib/money";
+import { natureRegistry } from "@/lib/natures/registry";
+
+export const dynamic = "force-dynamic";
 
 export default async function SubProductPage({
   params,
@@ -7,17 +13,23 @@ export default async function SubProductPage({
   params: Promise<{ productSlug: string; subSlug: string }>;
 }) {
   const { productSlug, subSlug } = await params;
+  const found = await getSubBySlugs(productSlug, subSlug);
+  if (!found) notFound();
+  const { product, sub } = found;
+  const nature = natureRegistry[product.nature];
 
   return (
     <PageShell
-      title={subSlug}
-      lead={`Sub-product under ${productSlug}. Nature-specific customizer mounts here from the type registry.`}
+      title={sub.name}
+      lead={`${product.name} · ${nature.label} · ${senToRm(sub.priceSen)}${sub.badgeText ? ` · ${sub.badgeText}` : ""}`}
     >
-      <div className="cta-row">
-        <Link className="button" href="/order">
-          Continue to order
-        </Link>
-      </div>
+      <NatureCustomizer
+        nature={product.nature}
+        config={sub.config}
+        productSlug={product.slug}
+        subSlug={sub.slug}
+        unitPriceSen={sub.priceSen}
+      />
     </PageShell>
   );
 }
