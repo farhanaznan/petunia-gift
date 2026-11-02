@@ -209,6 +209,38 @@ a:hover {
   background: color-mix(in oklab, white 70%, transparent);
 }
 
+.panel input {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 0.45rem;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+}
+
+.form-error {
+  color: #8a1f1f;
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.form-info {
+  color: var(--accent);
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+button.button {
+  cursor: pointer;
+  font: inherit;
+}
+
+button.button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
 @media (max-width: 800px) {
   .admin-shell {
     grid-template-columns: 1fr;

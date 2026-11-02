@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { logoutAdminAction } from "@/lib/auth/actions";
 
 const links = [
   { href: "/admin", label: "Ops home" },
@@ -9,7 +10,7 @@ const links = [
   { href: "/admin/settings", label: "Settings" },
 ] as const;
 
-export function AdminNav() {
+export function AdminNav({ email }: { email?: string }) {
   return (
     <nav className="admin-nav" aria-label="Admin">
       <Link href="/admin" className="brand">
@@ -22,9 +23,14 @@ export function AdminNav() {
           </li>
         ))}
       </ul>
-      <Link href="/admin/login" className="admin-login-link">
-        Login
-      </Link>
+      <div className="admin-login-link stack">
+        {email ? <span className="muted">{email}</span> : null}
+        <form action={logoutAdminAction}>
+          <button type="submit" className="button secondary">
+            Log out
+          </button>
+        </form>
+      </div>
     </nav>
   );
 }

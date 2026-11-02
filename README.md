@@ -15,87 +15,132 @@ Product natures: `museum_of_us` · `f1_pick_and_go` · `graduation_lego_frame`.
 | DB | Neon Postgres through Cloudflare Hyperdrive |
 | ORM | Drizzle (`src/lib/db/schema.ts`) |
 | Media | Cloudflare R2 (`MEDIA_BUCKET`) — keys only in Postgres |
-| Admin auth | iron-session + bcryptjs (stub UI + helpers) |
+| Admin auth | iron-session + bcryptjs against `admins` |
 | Validation | Zod shared natures / Malaysia address |
 
 ## Quick start (local)
 
 ```bash
 cp .env.example .env.local
+# set DATABASE_URL + SESSION_SECRET (+ optional ADMIN_SEED_*)
 npm install
+npm run db:push          # apply schema to Neon
+npm run db:seed-admin    # first admin from ADMIN_SEED_* 
 npm run dev
 ```
 
-Optional:
+Open `http://localhost:3000/admin/login`.
 
-```bash
-npm run typecheck
-npm run db:generate   # needs DATABASE_URL
-npm run preview       # OpenNext build + Wrangler preview
-```
+## Admin auth
+
+- **Login:** `/admin/login` — email/password → iron-session cookie `petunia_admin_session`
+- **Gate:** middleware protects all `/admin/*` except `/admin/login`
+- **Seed options:**
+  1. `npm run db:seed-admin` with `DATABASE_URL` + `ADMIN_SEED_EMAIL` + `ADMIN_SEED_PASSWORD`
+  2. On the login page, **Seed first admin from env** (only if `admins` is empty and those env vars are set on the Worker / `.env.local`)
+- **Logout:** button in admin nav
 
 ## Deploy path (Cloudflare)
 
-### Shell-only staging (current `wrangler.jsonc`)
+### A) Shell-only staging (no DB yet)
 
-Hyperdrive + R2 bindings are **omitted** so route shells can deploy without Neon/R2.
+Current `wrangler.jsonc` omits Hyperdrive + R2 so route shells keep deploying.
 
 ```bash
 npx wrangler login   # or CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID
 npm run deploy
 ```
 
-Expect `https://petunia-gift.<subdomain>.workers.dev`. No live catalog, checkout, or media until full bindings return.
+URL shape: `https://petunia-gift.<subdomain>.workers.dev`  
+Admin login will show “Database is not configured” until Neon/Hyperdrive (or `DATABASE_URL` secret) is wired.
 
-### Full soft-launch (Neon + R2)
+### B) Enable real admin login on staging
 
-1. Create **Neon** database; copy connection string into `.env` / Hyperdrive origin.
-2. Create **Hyperdrive** → put id in `wrangler.jsonc` `hyperdrive` binding.
-3. Create private **R2** bucket `petunia-gift-media` → `MEDIA_BUCKET` binding.
-4. Optional R2 S3 API tokens for browser **presigned** uploads (`R2_*` secrets).
-5. Set Worker secrets: `SESSION_SECRET`, optional `ADMIN_SEED_*`.
-6. `npm run deploy`
+**1. Neon**
+
+1. [console.neon.tech](https://console.neon.tech) → New project → copy the connection string (`postgresql://…?sslmode=require`).
+2. Locally:
+
+```bash
+export DATABASE_URL='postgresql://…'
+npm run db:push
+export ADMIN_SEED_EMAIL='you@example.com'
+export ADMIN_SEED_PASSWORD='your-strong-password'
+npm run db:seed-admin
+```
+
+**2. Hyperdrive**
+
+1. Cloudflare dashboard → **Hyperdrive** → **Create configuration**
+2. Paste the Neon connection string → create
+3. Copy the Hyperdrive **id**
+4. In `wrangler.jsonc`, uncomment/add:
+
+```jsonc
+"hyperdrive": [
+  {
+    "binding": "HYPERDRIVE",
+    "id": "<HYPERDRIVE_ID>",
+    "localConnectionString": "<same-neon-url>"
+  }
+]
+```
+
+**3. Secrets**
+
+```bash
+npx wrangler secret put SESSION_SECRET          # min 32 chars
+# optional if seeding from the login button on Workers:
+npx wrangler secret put ADMIN_SEED_EMAIL
+npx wrangler secret put ADMIN_SEED_PASSWORD
+# optional bridge without Hyperdrive yet:
+# npx wrangler secret put DATABASE_URL
+```
+
+**4. R2 (media — not required for login)**
+
+1. R2 → Create bucket `petunia-gift-media`
+2. Uncomment `r2_buckets` / `MEDIA_BUCKET` in `wrangler.jsonc`
+
+**5. Redeploy**
+
+```bash
+npm run deploy
+```
+
+Then open `https://petunia-gift.<subdomain>.workers.dev/admin/login` and sign in with the seeded admin.
 
 Do **not** cut over `petunia-gift.com` until approved.
 
 ## R2 layout
 
-All media in `petunia-gift-media` (private). Postgres stores keys + metadata only.
-
 ```text
 products/{productId}/hero/{filename}
 products/{productId}/subs/{subProductId}/{filename}
 products/graduation/variants/{variant}.png
-customer/{orderId}/{uuid}.{ext}          # private customization photos
-receipts/{orderId}/{uuid}.{ext}          # private payment proof
-payments/tng-qr/{version}.{ext}          # singleton shared TnG QR (versioned)
+customer/{orderId}/{uuid}.{ext}
+receipts/{orderId}/{uuid}.{ext}
+payments/tng-qr/{version}.{ext}
 ```
 
-Helpers: `src/lib/r2/keys.ts`, `src/lib/r2/client.ts`, `src/lib/r2/signed-url.ts`.
+## Route map
 
-## Route shells
+**Storefront:** `/` · `/shop` · `/shop/[productSlug]` · `/shop/[productSlug]/[subSlug]` · `/order` · `/order/pay` · `/order/thanks` · `/order/status/[token]` · `/about` · `/faq` · `/contact` · `/legal/*`
 
-**Storefront:** `/` · `/shop` · `/shop/[productSlug]` · `/shop/[productSlug]/[subSlug]` · `/order` · `/order/pay` · `/order/thanks` · `/order/status/[token]` · `/about` · `/faq` · `/contact` · `/legal/privacy` · `/legal/terms`
+**Admin:** `/admin/login` (public) · gated `/admin` · `/admin/orders` · `/admin/products` · `/admin/capacity` · `/admin/payments/qr` · `/admin/settings`
 
-**Admin:** `/admin/login` · `/admin` · `/admin/orders` · `/admin/orders/[id]` · `/admin/products` · `/admin/products/[id]` · `/admin/products/[id]/subs` · `/admin/capacity` · `/admin/payments/qr` · `/admin/settings`
+## What’s in
 
-## What’s in this scaffold (Phase 0)
+- Phase 0 scaffold + OpenNext / Wrangler
+- Drizzle schema + `drizzle/0000_init.sql`
+- Working admin login gate + seed path
+- Nature registry + R2 helpers + storefront/admin shells
 
-- Cloudflare-ready Next.js app + OpenNext / Wrangler config
-- Drizzle schema for products, capacity, orders, media keys, payment settings, audit
-- Nature registry for the three locked product types
-- Admin session/password helpers (login UI stub)
-- R2 key helpers + binding + presign stubs
-- Storefront + admin route shells (EN)
-- `.env.example` + this README
+## Next
 
-## Next (Phase 1)
-
-- Seed admin + catalog (Museum / F1 / Graduation)
-- Wire DB client in Server Actions / Route Handlers via Hyperdrive
-- Typed customizers + checkout (capacity hold, MY address, TnG + receipt)
-- Admin CRUD, capacity calendar, receipt confirm/reject
-- Real auth gate on `/admin/*`
+- Catalog seed (Museum / F1 / Graduation)
+- Typed customizers + checkout (capacity, MY address, TnG + receipt)
+- Admin CRUD / capacity / receipt review
 
 ## Repo
 

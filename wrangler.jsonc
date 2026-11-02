@@ -12,7 +12,19 @@
     "enabled": true
   }
   // Shell-only staging: Hyperdrive + R2 omitted so placeholders don't block deploy.
-  // Full soft-launch (Neon + media) — restore bindings like:
-  // "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "<HYPERDRIVE_ID>", "localConnectionString": "postgresql://..." }],
-  // "r2_buckets": [{ "binding": "MEDIA_BUCKET", "bucket_name": "petunia-gift-media" }]
+  //
+  // After Neon + Hyperdrive + R2 exist, restore bindings (and redeploy):
+  // "hyperdrive": [
+  //   {
+  //     "binding": "HYPERDRIVE",
+  //     "id": "<HYPERDRIVE_ID>",
+  //     "localConnectionString": "postgresql://USER:PASSWORD@HOST/neondb?sslmode=require"
+  //   }
+  // ],
+  // "r2_buckets": [
+  //   { "binding": "MEDIA_BUCKET", "bucket_name": "petunia-gift-media" }
+  // ]
+  //
+  // Secrets (wrangler secret put …): SESSION_SECRET, optional DATABASE_URL,
+  // ADMIN_SEED_EMAIL, ADMIN_SEED_PASSWORD, R2_* for presigned uploads.
 }

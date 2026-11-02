@@ -1,5 +1,3 @@
-import { AdminNav } from "@/components/admin-nav";
-
 export const metadata = {
   title: {
     default: "Admin",
@@ -7,15 +5,10 @@ export const metadata = {
   },
 };
 
-export default function AdminLayout({
+export default function AdminRootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div className="admin-shell">
-      <AdminNav />
-      <div className="admin-main">{children}</div>
-    </div>
-  );
+  return children;
 }
