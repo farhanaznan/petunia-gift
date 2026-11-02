@@ -10,6 +10,7 @@ import {
   orders,
   paymentSettings,
   products,
+  subProductImages,
   subProducts,
 } from "@/lib/db/schema";
 import {
@@ -39,6 +40,7 @@ export async function upsertProductAction(
       description: z.string().default(""),
       nature: productNatureSchema,
       badgeText: z.string().optional(),
+      heroImageKey: z.string().optional(),
       isActive: z.coerce.boolean().default(true),
       sortOrder: z.coerce.number().int().default(0),
     })
@@ -49,12 +51,14 @@ export async function upsertProductAction(
       description: formData.get("description") || "",
       nature: formData.get("nature"),
       badgeText: formData.get("badgeText") || undefined,
+      heroImageKey: formData.get("heroImageKey") || undefined,
       isActive: formData.get("isActive") === "on",
       sortOrder: formData.get("sortOrder") || 0,
     });
   if (!parsed.success) return { error: "Invalid product fields." };
 
   const db = await getDb();
+  const heroImageKey = parsed.data.heroImageKey?.trim() || null;
   if (parsed.data.id) {
     await db
       .update(products)
@@ -64,6 +68,7 @@ export async function upsertProductAction(
         description: parsed.data.description,
         nature: parsed.data.nature,
         badgeText: parsed.data.badgeText || null,
+        heroImageKey,
         isActive: parsed.data.isActive,
         sortOrder: parsed.data.sortOrder,
         updatedAt: new Date(),
@@ -76,6 +81,7 @@ export async function upsertProductAction(
       description: parsed.data.description,
       nature: parsed.data.nature,
       badgeText: parsed.data.badgeText || null,
+      heroImageKey,
       isActive: parsed.data.isActive,
       sortOrder: parsed.data.sortOrder,
     });
@@ -94,6 +100,7 @@ export async function upsertSubProductAction(
   const id = String(formData.get("id") || "");
   const slug = String(formData.get("slug") || "");
   const name = String(formData.get("name") || "");
+  const description = String(formData.get("description") || "");
   const priceSen = Number(formData.get("priceSen") || 0);
   const badgeText = String(formData.get("badgeText") || "") || null;
   const isActive = formData.get("isActive") === "on";
@@ -126,6 +133,7 @@ export async function upsertSubProductAction(
       .set({
         slug,
         name,
+        description,
         priceSen,
         badgeText,
         isActive,
@@ -139,6 +147,7 @@ export async function upsertSubProductAction(
       productId,
       slug,
       name,
+      description,
       priceSen,
       badgeText,
       isActive,
@@ -150,6 +159,30 @@ export async function upsertSubProductAction(
   revalidatePath(`/admin/products/${productId}/subs`);
   revalidatePath("/shop");
   return { info: "Sub-product saved." };
+}
+
+export async function addSubProductImageAction(
+  _prev: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  await guard();
+  const productId = String(formData.get("productId") || "");
+  const subProductId = String(formData.get("subProductId") || "");
+  const storageKey = String(formData.get("storageKey") || "").trim();
+  const alt = String(formData.get("alt") || "").trim();
+  if (!subProductId || !storageKey) {
+    return { error: "Upload an image before saving." };
+  }
+
+  const db = await getDb();
+  await db.insert(subProductImages).values({
+    subProductId,
+    storageKey,
+    alt,
+  });
+  revalidatePath(`/admin/products/${productId}/subs`);
+  revalidatePath("/shop");
+  return { info: "Image added." };
 }
 
 export async function upsertCapacityAction(

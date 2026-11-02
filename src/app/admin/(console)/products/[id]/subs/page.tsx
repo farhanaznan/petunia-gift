@@ -1,11 +1,10 @@
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
-import { AdminActionForm } from "@/components/admin/admin-form";
+import { SubProductEditor } from "@/components/admin/sub-product-editor";
 import { PageShell } from "@/components/page-shell";
-import { upsertSubProductAction } from "@/lib/admin/catalog-actions";
+import { addSubProductImageAction } from "@/lib/admin/catalog-actions";
 import { getDb } from "@/lib/db";
-import { products, subProducts } from "@/lib/db/schema";
-import { senToRm } from "@/lib/money";
+import { products, subProductImages, subProducts } from "@/lib/db/schema";
 import { natureRegistry } from "@/lib/natures/registry";
 
 export const dynamic = "force-dynamic";
@@ -23,10 +22,30 @@ export default async function AdminSubProductsPage({
     .where(eq(products.id, id))
     .limit(1);
   if (!product) notFound();
+
   const subs = await db
     .select()
     .from(subProducts)
+    .where(eq(subProducts.productId, id))
+    .orderBy(asc(subProducts.sortOrder));
+
+  const images = await db
+    .select()
+    .from(subProductImages)
+    .innerJoin(subProducts, eq(subProductImages.subProductId, subProducts.id))
     .where(eq(subProducts.productId, id));
+
+  const imagesBySub = new Map<string, { id: string; storageKey: string; alt: string }[]>();
+  for (const row of images) {
+    const list = imagesBySub.get(row.sub_product_images.subProductId) ?? [];
+    list.push({
+      id: row.sub_product_images.id,
+      storageKey: row.sub_product_images.storageKey,
+      alt: row.sub_product_images.alt,
+    });
+    imagesBySub.set(row.sub_product_images.subProductId, list);
+  }
+
   const defaultConfig = JSON.stringify(
     natureRegistry[product.nature].defaultConfig(),
     null,
@@ -35,49 +54,24 @@ export default async function AdminSubProductsPage({
 
   return (
     <PageShell title="Sub-products" lead={product.name}>
-      <ul className="route-list">
-        {subs.map((s) => (
-          <li key={s.id}>
-            {s.name} ({s.slug}) — {senToRm(s.priceSen)}
-            {s.badgeText ? ` · ${s.badgeText}` : ""}
-          </li>
-        ))}
-      </ul>
-
-      <h2 style={{ marginTop: "2rem" }}>Add / note</h2>
-      <p className="muted">
-        Create new subs below. Editing existing rows: recreate with same slug is blocked by unique index — use SQL/studio for now or add edit forms later.
-      </p>
-      <AdminActionForm action={upsertSubProductAction} submitLabel="Create sub-product">
-        <input type="hidden" name="productId" value={product.id} />
-        <label className="stack">
-          <span>Slug</span>
-          <input name="slug" required />
-        </label>
-        <label className="stack">
-          <span>Name</span>
-          <input name="name" required />
-        </label>
-        <label className="stack">
-          <span>Price (sen)</span>
-          <input name="priceSen" type="number" required defaultValue={5000} />
-        </label>
-        <label className="stack">
-          <span>Badge</span>
-          <input name="badgeText" />
-        </label>
-        <label className="stack">
-          <span>Sort order</span>
-          <input name="sortOrder" type="number" defaultValue={0} />
-        </label>
-        <label className="stack">
-          <span>Config JSON ({product.nature})</span>
-          <textarea name="config" rows={8} defaultValue={defaultConfig} />
-        </label>
-        <label style={{ display: "flex", gap: "0.5rem" }}>
-          <input name="isActive" type="checkbox" defaultChecked /> Active
-        </label>
-      </AdminActionForm>
+      <SubProductEditor
+        productId={product.id}
+        nature={product.nature}
+        defaultConfig={defaultConfig}
+        addImageAction={addSubProductImageAction}
+        subs={subs.map((s) => ({
+          id: s.id,
+          slug: s.slug,
+          name: s.name,
+          description: s.description,
+          priceSen: s.priceSen,
+          badgeText: s.badgeText,
+          isActive: s.isActive,
+          sortOrder: s.sortOrder,
+          config: s.config,
+          images: imagesBySub.get(s.id) ?? [],
+        }))}
+      />
     </PageShell>
   );
 }

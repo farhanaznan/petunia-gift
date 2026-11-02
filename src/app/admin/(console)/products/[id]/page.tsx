@@ -2,6 +2,7 @@ import Link from "next/link";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { AdminActionForm } from "@/components/admin/admin-form";
+import { MediaKeyField } from "@/components/admin/media-key-field";
 import { PageShell } from "@/components/page-shell";
 import { upsertProductAction } from "@/lib/admin/catalog-actions";
 import { getDb } from "@/lib/db";
@@ -29,6 +30,16 @@ export default async function AdminProductEditPage({
       <p>
         <Link href={`/admin/products/${product.id}/subs`}>Manage sub-products →</Link>
       </p>
+      {product.heroImageKey ? (
+        <div className="panel" style={{ marginBottom: "1rem" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`/api/media?key=${encodeURIComponent(product.heroImageKey)}`}
+            alt={`${product.name} hero`}
+            style={{ maxWidth: "min(320px, 100%)" }}
+          />
+        </div>
+      ) : null}
       <AdminActionForm action={upsertProductAction}>
         <input type="hidden" name="id" value={product.id} />
         <label className="stack">
@@ -54,9 +65,16 @@ export default async function AdminProductEditPage({
           </select>
         </label>
         <label className="stack">
-          <span>Badge</span>
+          <span>Badge (e.g. HOT!)</span>
           <input name="badgeText" defaultValue={product.badgeText ?? ""} />
         </label>
+        <MediaKeyField
+          name="heroImageKey"
+          kind="product_hero"
+          label="Hero image"
+          defaultKey={product.heroImageKey ?? ""}
+          productId={product.id}
+        />
         <label className="stack">
           <span>Sort order</span>
           <input name="sortOrder" type="number" defaultValue={product.sortOrder} />

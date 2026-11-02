@@ -76,6 +76,13 @@ function parseCustomization(
   const cfg = graduationLegoFrameConfigSchema.parse(config);
   const parsed = graduationCustomizationSchema.safeParse(raw);
   if (!parsed.success) return { ok: false, error: "Choose a Lego variant." };
+  const allowed = new Set(cfg.variants.map((v) => v.key));
+  if (!allowed.has(parsed.data.legoVariant)) {
+    return { ok: false, error: "Pick exactly one of the three Lego variants." };
+  }
+  if (parsed.data.imageKeys.length > 1) {
+    return { ok: false, error: "Graduation frames allow at most one photo." };
+  }
   const surchargeSen = computeSurchargeSen(
     "graduation_lego_frame",
     parsed.data,
@@ -253,10 +260,7 @@ export async function submitReceiptAction(
 
   if (!publicRef || !statusToken) return { error: "Missing order reference." };
   if (!receiptKey) {
-    return {
-      error:
-        "Upload a receipt first (or paste a temporary receipt key if R2 is not configured).",
-    };
+    return { error: "Upload a receipt image or PDF before submitting." };
   }
 
   const db = await getDb();

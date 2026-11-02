@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { PlaceOrderForm } from "@/components/checkout/place-order-form";
 import { PageShell } from "@/components/page-shell";
-import { listOpenCapacityDates } from "@/lib/catalog/queries";
+import { listOpenCapacityWithRemaining } from "@/lib/catalog/capacity";
 import { getCheckoutCart } from "@/lib/checkout/cart";
 import { MALAYSIA_STATES } from "@/lib/malaysia";
 import { senToRm } from "@/lib/money";
@@ -24,7 +24,7 @@ export default async function OrderPage() {
     );
   }
 
-  const dates = await listOpenCapacityDates(cart.subProductId);
+  const dates = await listOpenCapacityWithRemaining(cart.subProductId);
 
   return (
     <PageShell
@@ -33,16 +33,22 @@ export default async function OrderPage() {
     >
       <div className="panel stack" style={{ marginBottom: "1rem" }}>
         <p>
-          Unit {senToRm(cart.unitPriceSen)}
-          {cart.surchargeSen
-            ? ` + surcharge ${senToRm(cart.surchargeSen)}`
-            : ""}
+          Review: {cart.nature.replaceAll("_", " ")} · base{" "}
+          {senToRm(cart.unitPriceSen)}
+          {cart.surchargeSen ? ` + surcharge ${senToRm(cart.surchargeSen)}` : ""}
         </p>
-        <p className="muted">Shipping calculated from Malaysia state (RM6 / East MY RM15).</p>
+        <pre style={{ whiteSpace: "pre-wrap", fontSize: "0.85rem", margin: 0 }}>
+          {JSON.stringify(cart.customization, null, 2)}
+        </pre>
       </div>
       <PlaceOrderForm
-        shipDates={dates.map((d) => d.shipDate)}
+        shipDates={dates.map((d) => ({
+          shipDate: d.shipDate,
+          remaining: d.remaining,
+        }))}
         states={[...MALAYSIA_STATES]}
+        unitPriceSen={cart.unitPriceSen}
+        surchargeSen={cart.surchargeSen}
       />
     </PageShell>
   );

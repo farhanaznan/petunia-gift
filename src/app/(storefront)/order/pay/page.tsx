@@ -55,20 +55,21 @@ export default async function OrderPayPage({
   return (
     <PageShell
       title="Pay with Touch ’n Go"
-      lead={`Order ${order.publicRef} · total ${senToRm(order.totalSen)} · status ${order.status}`}
+      lead={`Order ${order.publicRef} · total ${senToRm(order.totalSen)} · ${order.status}`}
     >
       <div className="panel stack" style={{ marginBottom: "1rem" }}>
-        <p className="muted">
-          TnG QR key: {qrKey ? <code>{qrKey}</code> : "not set (admin → Payments QR)"}
-        </p>
-        <p className="muted">
-          Tap-to-zoom image renders here once R2 signed GET is wired for the QR key.
+        <p>Item {senToRm(order.unitPriceSen)}</p>
+        <p>Surcharge {senToRm(order.surchargeSen)}</p>
+        <p>Shipping {senToRm(order.shippingFeeSen)}</p>
+        <p>
+          <strong>Total {senToRm(order.totalSen)}</strong>
         </p>
       </div>
       <PayForm
         publicRef={order.publicRef}
         statusToken={order.statusToken}
-        hasQr={Boolean(qrKey)}
+        orderId={order.id}
+        qrKey={qrKey}
       />
     </PageShell>
   );

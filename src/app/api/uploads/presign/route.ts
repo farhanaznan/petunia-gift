@@ -18,8 +18,8 @@ const bodySchema = z.object({
 });
 
 /**
- * Presign stub for browser → R2 uploads.
- * Requires R2_* env / secrets. Returns 503 when not configured.
+ * Optional S3-compatible presign fallback.
+ * Prefer POST /api/uploads (MEDIA_BUCKET binding) for Workers deploys.
  */
 export async function POST(request: Request) {
   const json = await request.json().catch(() => null);

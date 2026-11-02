@@ -23,6 +23,21 @@ export default async function ProductPage({
 
   return (
     <PageShell title={product.name} lead={product.description}>
+      {product.heroImageKey ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={`/api/media?key=${encodeURIComponent(product.heroImageKey)}`}
+          alt=""
+          style={{
+            width: "100%",
+            maxWidth: 520,
+            aspectRatio: "16 / 9",
+            objectFit: "cover",
+            borderRadius: 8,
+            marginBottom: "1rem",
+          }}
+        />
+      ) : null}
       <p className="muted">
         Type: {nature.label}
         {product.badgeText ? ` · ${product.badgeText}` : ""}
@@ -34,6 +49,9 @@ export default async function ProductPage({
               {sub.name}
               {sub.badgeText ? ` · ${sub.badgeText}` : ""} — {senToRm(sub.priceSen)}
             </Link>
+            {sub.description ? (
+              <div className="muted">{sub.description}</div>
+            ) : null}
           </li>
         ))}
       </ul>

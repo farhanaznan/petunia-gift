@@ -1,33 +1,54 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useMemo, useState } from "react";
 import {
   placeOrderAction,
   type ActionState,
 } from "@/lib/checkout/actions";
+import { EAST_MALAYSIA_STATES, SHIPPING_FEE_SEN } from "@/lib/malaysia";
+import { senToRm } from "@/lib/money";
 
 const initial: ActionState = {};
 
 export function PlaceOrderForm({
   shipDates,
   states,
+  unitPriceSen,
+  surchargeSen,
 }: {
-  shipDates: string[];
+  shipDates: { shipDate: string; remaining: number }[];
   states: string[];
+  unitPriceSen: number;
+  surchargeSen: number;
 }) {
   const [state, action, pending] = useActionState(placeOrderAction, initial);
+  const [selectedState, setSelectedState] = useState("");
+
+  const shippingFeeSen = useMemo(() => {
+    if (!selectedState) return null;
+    return EAST_MALAYSIA_STATES.includes(
+      selectedState as (typeof EAST_MALAYSIA_STATES)[number],
+    )
+      ? SHIPPING_FEE_SEN.east
+      : SHIPPING_FEE_SEN.peninsular;
+  }, [selectedState]);
+
+  const total =
+    shippingFeeSen == null
+      ? null
+      : unitPriceSen + surchargeSen + shippingFeeSen;
 
   return (
     <form action={action} className="panel stack">
       <label className="stack">
-        <span>Ship date</span>
+        <span>Ship date (only dates with remaining capacity)</span>
         <select name="shipDate" required defaultValue="">
           <option value="" disabled>
             Select an open date
           </option>
           {shipDates.map((d) => (
-            <option key={d} value={d}>
-              {d}
+            <option key={d.shipDate} value={d.shipDate}>
+              {d.shipDate} · {d.remaining} left
             </option>
           ))}
         </select>
@@ -61,16 +82,21 @@ export function PlaceOrderForm({
         <input name="addressLine2" />
       </label>
       <label className="stack">
-        <span>Postcode</span>
-        <input name="postcode" required pattern="\d{5}" />
+        <span>Postcode (5 digits)</span>
+        <input name="postcode" required pattern="\d{5}" inputMode="numeric" />
       </label>
       <label className="stack">
         <span>City</span>
         <input name="city" required />
       </label>
       <label className="stack">
-        <span>State</span>
-        <select name="state" required defaultValue="">
+        <span>State (Malaysia only)</span>
+        <select
+          name="state"
+          required
+          defaultValue=""
+          onChange={(e) => setSelectedState(e.target.value)}
+        >
           <option value="" disabled>
             Select state
           </option>
@@ -83,6 +109,21 @@ export function PlaceOrderForm({
       </label>
       <input type="hidden" name="country" value="MY" />
 
+      <div className="panel stack">
+        <strong>Price breakdown</strong>
+        <p>Item {senToRm(unitPriceSen)}</p>
+        {surchargeSen ? <p>Surcharge {senToRm(surchargeSen)}</p> : <p>Surcharge {senToRm(0)}</p>}
+        <p>
+          Shipping{" "}
+          {shippingFeeSen == null ? "—" : senToRm(shippingFeeSen)}
+          <span className="muted"> (Peninsular {senToRm(SHIPPING_FEE_SEN.peninsular)} / East MY {senToRm(SHIPPING_FEE_SEN.east)})</span>
+        </p>
+        <p>
+          Total{" "}
+          <strong>{total == null ? "select state" : senToRm(total)}</strong>
+        </p>
+      </div>
+
       {state.error ? (
         <p className="form-error" role="alert">
           {state.error}
@@ -90,7 +131,7 @@ export function PlaceOrderForm({
       ) : null}
 
       <button className="button" type="submit" disabled={pending || !shipDates.length}>
-        {pending ? "Placing hold…" : "Continue to Touch ’n Go payment"}
+        {pending ? "Reserving capacity…" : "Continue to Touch ’n Go payment"}
       </button>
     </form>
   );

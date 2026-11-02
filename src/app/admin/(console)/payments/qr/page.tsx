@@ -1,4 +1,5 @@
 import { AdminActionForm } from "@/components/admin/admin-form";
+import { MediaKeyField } from "@/components/admin/media-key-field";
 import { PageShell } from "@/components/page-shell";
 import { saveTngQrAction } from "@/lib/admin/catalog-actions";
 import { tryGetDb } from "@/lib/db";
@@ -14,25 +15,32 @@ export default async function AdminTngQrPage() {
   return (
     <PageShell
       title="Touch ’n Go QR"
-      lead="Store the R2 object key for the shared TnG QR. Replace anytime."
+      lead="Upload or replace the shared TnG QR shown at checkout payment."
     >
-      <p className="muted">
-        Current key: {row?.tngQrKey ? <code>{row.tngQrKey}</code> : "not set"}
-      </p>
-      <AdminActionForm action={saveTngQrAction} submitLabel="Save QR key">
-        <label className="stack">
-          <span>R2 key (e.g. payments/tng-qr/v1.png)</span>
-          <input
-            name="tngQrKey"
-            required
-            defaultValue={row?.tngQrKey ?? "payments/tng-qr/v1.png"}
+      {row?.tngQrKey ? (
+        <div className="panel stack" style={{ marginBottom: "1rem" }}>
+          <p className="muted">
+            Current key: <code>{row.tngQrKey}</code>
+          </p>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`/api/media?key=${encodeURIComponent(row.tngQrKey)}`}
+            alt="Current Touch n Go QR"
+            style={{ width: "min(240px, 100%)", background: "#fff", padding: 8 }}
           />
-        </label>
+        </div>
+      ) : (
+        <p className="muted">No QR uploaded yet.</p>
+      )}
+
+      <AdminActionForm action={saveTngQrAction} submitLabel="Save TnG QR">
+        <MediaKeyField
+          name="tngQrKey"
+          kind="tng_qr"
+          label="Upload TnG QR image (JPEG/PNG/WebP)"
+          defaultKey={row?.tngQrKey ?? ""}
+        />
       </AdminActionForm>
-      <p className="muted" style={{ marginTop: "1rem" }}>
-        Browser upload to R2 via presigned PUT lands next — for now paste the key
-        after uploading with Wrangler/R2 console.
-      </p>
     </PageShell>
   );
 }
