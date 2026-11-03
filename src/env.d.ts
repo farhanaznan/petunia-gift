@@ -12,6 +12,17 @@ declare namespace NodeJS {
     APP_URL?: string;
     ADMIN_SEED_EMAIL?: string;
     ADMIN_SEED_PASSWORD?: string;
+    DELYVA_API_KEY?: string;
+    DELYVA_CUSTOMER_ID?: string;
+    DELYVA_ORIGIN_NAME?: string;
+    DELYVA_ORIGIN_EMAIL?: string;
+    DELYVA_ORIGIN_PHONE?: string;
+    DELYVA_ORIGIN_ADDRESS1?: string;
+    DELYVA_ORIGIN_ADDRESS2?: string;
+    DELYVA_ORIGIN_CITY?: string;
+    DELYVA_ORIGIN_STATE?: string;
+    DELYVA_ORIGIN_POSTCODE?: string;
+    DELYVA_ORIGIN_COUNTRY?: string;
   }
 }
 

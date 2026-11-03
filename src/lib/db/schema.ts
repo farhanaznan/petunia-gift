@@ -188,6 +188,14 @@ export const orders = pgTable(
     adminNotes: text("admin_notes"),
     statusToken: text("status_token").notNull(),
     capacityHeldUntil: timestamp("capacity_held_until", { withTimezone: true }),
+    /** Delyva shipment id (numeric string). */
+    delyvaOrderId: text("delyva_order_id"),
+    /** Courier consignment / SPX tracking number for customer tracking. */
+    trackingNumber: text("tracking_number"),
+    /** Delyva internal tracking no when distinct from consignment. */
+    delyvaTrackingNo: text("delyva_tracking_no"),
+    delyvaServiceCode: text("delyva_service_code"),
+    delyvaStatusCode: integer("delyva_status_code"),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
     ...timestamps,
   },
@@ -198,6 +206,8 @@ export const orders = pgTable(
     index("orders_ship_date_idx").on(t.shipDate),
     index("orders_sub_product_idx").on(t.subProductId),
     index("orders_email_idx").on(t.email),
+    index("orders_delyva_order_idx").on(t.delyvaOrderId),
+    index("orders_tracking_number_idx").on(t.trackingNumber),
   ],
 );
 

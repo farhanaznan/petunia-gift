@@ -3,6 +3,13 @@ import { notFound } from "next/navigation";
 import { AdminActionForm } from "@/components/admin/admin-form";
 import { PageShell } from "@/components/page-shell";
 import { updateOrderStatusAction } from "@/lib/admin/catalog-actions";
+import {
+  cancelDelyvaOrderAction,
+  confirmOrderWithDelyvaAction,
+  processDelyvaOrderAction,
+  refreshDelyvaDetailsAction,
+} from "@/lib/admin/delyva-actions";
+import { spxExpressTrackUrl } from "@/lib/delyva/constants";
 import { getDb } from "@/lib/db";
 import { orders, products, subProducts } from "@/lib/db/schema";
 import { senToRm } from "@/lib/money";
@@ -29,6 +36,9 @@ export default async function AdminOrderDetailPage({
     .limit(1);
   if (!row) notFound();
   const order = row.order;
+  const trackUrl = order.trackingNumber
+    ? spxExpressTrackUrl(order.trackingNumber)
+    : null;
 
   return (
     <PageShell
@@ -54,6 +64,64 @@ export default async function AdminOrderDetailPage({
             <p className="muted" style={{ margin: 0 }}>
               Ship date {order.shipDate}
             </p>
+          </div>
+
+          <div className="panel stack">
+            <p className="nature-tag">Delyva · Shopee Express</p>
+            {order.delyvaOrderId ? (
+              <>
+                <p style={{ margin: 0 }}>
+                  Delyva order <code>{order.delyvaOrderId}</code>
+                  {order.delyvaServiceCode ? (
+                    <>
+                      {" "}
+                      · <code>{order.delyvaServiceCode}</code>
+                    </>
+                  ) : null}
+                </p>
+                <p className="muted" style={{ margin: 0 }}>
+                  Status code {order.delyvaStatusCode ?? "—"}
+                  {order.delyvaTrackingNo
+                    ? ` · Delyva TN ${order.delyvaTrackingNo}`
+                    : ""}
+                </p>
+                {order.trackingNumber ? (
+                  <p style={{ margin: 0 }}>
+                    Consignment / tracking{" "}
+                    <strong>{order.trackingNumber}</strong>
+                  </p>
+                ) : (
+                  <p className="muted" style={{ margin: 0 }}>
+                    Consignment not issued yet — process or refresh details.
+                  </p>
+                )}
+                <div className="cta-row" style={{ justifyContent: "flex-start" }}>
+                  {trackUrl ? (
+                    <a
+                      className="button secondary"
+                      href={trackUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      SPX tracker
+                    </a>
+                  ) : null}
+                  <a
+                    className="button secondary"
+                    href={`/api/admin/orders/${order.id}/label`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Print label
+                  </a>
+                </div>
+              </>
+            ) : (
+              <p className="muted" style={{ margin: 0 }}>
+                No Delyva shipment yet. Confirm payment to create a Shopee
+                Express order (1 kg) and save tracking.
+              </p>
+            )}
           </div>
 
           <div className="panel stack">
@@ -144,7 +212,49 @@ export default async function AdminOrderDetailPage({
             </div>
           </div>
 
-          <AdminActionForm action={updateOrderStatusAction} submitLabel="Update order">
+          <AdminActionForm
+            action={confirmOrderWithDelyvaAction}
+            submitLabel="Confirm + create SPX"
+          >
+            <input type="hidden" name="id" value={order.id} />
+            <p className="muted" style={{ margin: 0, fontSize: "0.85rem" }}>
+              Creates a Delyva draft, processes it on Shopee Express (1 kg), and
+              saves the tracking number.
+            </p>
+            <label className="stack">
+              <span className="field-label">Admin notes</span>
+              <textarea
+                name="adminNotes"
+                rows={2}
+                defaultValue={order.adminNotes ?? ""}
+              />
+            </label>
+          </AdminActionForm>
+
+          {order.delyvaOrderId ? (
+            <>
+              <AdminActionForm
+                action={processDelyvaOrderAction}
+                submitLabel="Process / confirm Delyva"
+              >
+                <input type="hidden" name="id" value={order.id} />
+              </AdminActionForm>
+              <AdminActionForm
+                action={refreshDelyvaDetailsAction}
+                submitLabel="Get order details"
+              >
+                <input type="hidden" name="id" value={order.id} />
+              </AdminActionForm>
+              <AdminActionForm
+                action={cancelDelyvaOrderAction}
+                submitLabel="Cancel Delyva order"
+              >
+                <input type="hidden" name="id" value={order.id} />
+              </AdminActionForm>
+            </>
+          ) : null}
+
+          <AdminActionForm action={updateOrderStatusAction} submitLabel="Update status only">
             <input type="hidden" name="id" value={order.id} />
             <label className="stack">
               <span className="field-label">Status</span>
@@ -165,6 +275,13 @@ export default async function AdminOrderDetailPage({
               />
             </label>
           </AdminActionForm>
+
+          <p className="muted" style={{ margin: 0, fontSize: "0.8rem" }}>
+            Customer status:{" "}
+            <a href={`/order/status/${order.statusToken}`} target="_blank" rel="noreferrer">
+              /order/status/…
+            </a>
+          </p>
         </aside>
       </div>
     </PageShell>

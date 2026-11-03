@@ -90,12 +90,15 @@ Put the printed id into `wrangler.jsonc` `hyperdrive[0].id`.
 
 ```bash
 npx wrangler secret put SESSION_SECRET          # min 32 chars
+npx wrangler secret put DELYVA_API_KEY          # Delyva access token (never commit)
 # optional if seeding from the login button on Workers:
 npx wrangler secret put ADMIN_SEED_EMAIL
 npx wrangler secret put ADMIN_SEED_PASSWORD
 # optional bridge without Hyperdrive yet:
 # npx wrangler secret put DATABASE_URL
 ```
+
+Courier integration uses Delyva with **Shopee Express (SPX)** only, **1 kg** per gift order. Admin confirm creates/processes the shipment and stores the consignment number; customers track via the SPX tracker on `/order/status/[token]`.
 
 **4. R2 (media — not required for login)**
 
