@@ -15,6 +15,13 @@
       "when": 1793708172942,
       "tag": "0001_delyva_tracking",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793709110525,
+      "tag": "0002_delyva_courier_error",
+      "breakpoints": true
     }
   ]
 }

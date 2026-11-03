@@ -5,6 +5,7 @@ import { spxExpressTrackUrl } from "@/lib/delyva/constants";
 import { tryGetDb } from "@/lib/db";
 import { orders, products, subProducts } from "@/lib/db/schema";
 import { senToRm } from "@/lib/money";
+import { formatOrderStatus } from "@/lib/orders/status-label";
 
 export const dynamic = "force-dynamic";
 
@@ -49,9 +50,7 @@ export default async function OrderStatusPage({
       <div className="stack" style={{ maxWidth: "28rem", margin: "0 auto" }}>
         <div className="panel stack">
           <p className="nature-tag">Status</p>
-          <p style={{ margin: 0, textTransform: "capitalize" }}>
-            {order.status.replaceAll("_", " ")}
-          </p>
+          <p style={{ margin: 0 }}>{formatOrderStatus(order.status)}</p>
           <p className="muted" style={{ margin: 0 }}>
             Ship date {order.shipDate} · {senToRm(order.totalSen)}
           </p>

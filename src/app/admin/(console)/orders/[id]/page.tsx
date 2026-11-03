@@ -13,6 +13,7 @@ import { spxExpressTrackUrl } from "@/lib/delyva/constants";
 import { getDb } from "@/lib/db";
 import { orders, products, subProducts } from "@/lib/db/schema";
 import { senToRm } from "@/lib/money";
+import { formatOrderStatus } from "@/lib/orders/status-label";
 
 export const dynamic = "force-dynamic";
 
@@ -44,7 +45,7 @@ export default async function AdminOrderDetailPage({
     <PageShell
       kicker="Order detail"
       title={order.publicRef}
-      lead={`${row.productName} · ${row.subName} · ${order.status.replaceAll("_", " ")}`}
+      lead={`${row.productName} · ${row.subName} · ${formatOrderStatus(order.status)}`}
     >
       <div className="checkout-layout">
         <div className="stack">
@@ -68,17 +69,28 @@ export default async function AdminOrderDetailPage({
 
           <div className="panel stack">
             <p className="nature-tag">Delyva · Shopee Express</p>
-            {order.delyvaOrderId ? (
+            <p className="muted" style={{ margin: 0, fontSize: "0.85rem" }}>
+              Create runs once per order. Re-confirm returns the saved shipment.
+              Cancel clears the link.
+            </p>
+            {order.delyvaCourier ? (
+              <p style={{ margin: 0 }}>
+                Courier <strong>{order.delyvaCourier}</strong>
+              </p>
+            ) : null}
+            {order.delyvaOrderId || order.trackingNumber ? (
               <>
-                <p style={{ margin: 0 }}>
-                  Delyva order <code>{order.delyvaOrderId}</code>
-                  {order.delyvaServiceCode ? (
-                    <>
-                      {" "}
-                      · <code>{order.delyvaServiceCode}</code>
-                    </>
-                  ) : null}
-                </p>
+                {order.delyvaOrderId ? (
+                  <p style={{ margin: 0 }}>
+                    Delyva order <code>{order.delyvaOrderId}</code>
+                    {order.delyvaServiceCode ? (
+                      <>
+                        {" "}
+                        · <code>{order.delyvaServiceCode}</code>
+                      </>
+                    ) : null}
+                  </p>
+                ) : null}
                 <p className="muted" style={{ margin: 0 }}>
                   Status code {order.delyvaStatusCode ?? "—"}
                   {order.delyvaTrackingNo
@@ -106,14 +118,16 @@ export default async function AdminOrderDetailPage({
                       SPX tracker
                     </a>
                   ) : null}
-                  <a
-                    className="button secondary"
-                    href={`/api/admin/orders/${order.id}/label`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Print label
-                  </a>
+                  {order.delyvaOrderId ? (
+                    <a
+                      className="button secondary"
+                      href={`/api/admin/orders/${order.id}/label`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Print label
+                    </a>
+                  ) : null}
                 </div>
               </>
             ) : (
@@ -122,6 +136,11 @@ export default async function AdminOrderDetailPage({
                 Express order (1 kg) and save tracking.
               </p>
             )}
+            {order.delyvaLastError ? (
+              <p className="form-error" style={{ margin: 0 }}>
+                Last Delyva error: {order.delyvaLastError}
+              </p>
+            ) : null}
           </div>
 
           <div className="panel stack">

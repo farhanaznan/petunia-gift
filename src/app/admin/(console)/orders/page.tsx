@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { and, asc, desc, eq, gte, lte, sql } from "drizzle-orm";
+import { OrdersBulkTable } from "@/components/admin/orders-bulk-table";
 import { PageShell } from "@/components/page-shell";
 import { tryGetDb } from "@/lib/db";
 import { orders, products, subProducts } from "@/lib/db/schema";
@@ -17,15 +18,6 @@ const STATUSES = [
   "expired_hold",
   "done",
 ] as const;
-
-function statusTone(status: string): "ok" | "warn" | "danger" | "neutral" {
-  if (status === "confirmed" || status === "done") return "ok";
-  if (status === "pending_payment_review" || status === "draft_hold") return "warn";
-  if (status === "rejected" || status === "cancelled" || status === "expired_hold") {
-    return "danger";
-  }
-  return "neutral";
-}
 
 export default async function AdminOrdersPage({
   searchParams,
@@ -86,6 +78,8 @@ export default async function AdminOrdersPage({
           createdAt: orders.createdAt,
           subName: subProducts.name,
           productName: products.name,
+          delyvaOrderId: orders.delyvaOrderId,
+          trackingNumber: orders.trackingNumber,
         })
         .from(orders)
         .innerJoin(subProducts, eq(orders.subProductId, subProducts.id))
@@ -99,7 +93,7 @@ export default async function AdminOrdersPage({
     <PageShell
       kicker="Orders"
       title="Order desk"
-      lead="Filter by order date, ship date, sub-product, or status."
+      lead="Filter, bulk-confirm payment (one Delyva create per order), reject, or print SPX labels."
     >
       <form method="get" className="filter-bar">
         <div className="filter-bar-grid">
@@ -140,7 +134,7 @@ export default async function AdminOrdersPage({
               <option value="">All</option>
               {STATUSES.map((s) => (
                 <option key={s} value={s}>
-                  {s}
+                  {s === "pending_payment_review" ? "Pending review" : s}
                 </option>
               ))}
             </select>
@@ -156,43 +150,21 @@ export default async function AdminOrdersPage({
         </div>
       </form>
 
-      <div style={{ overflowX: "auto" }}>
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Ref</th>
-              <th>Status</th>
-              <th>Ship</th>
-              <th>Product</th>
-              <th>Total</th>
-              <th>Email</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((o) => (
-              <tr key={o.id}>
-                <td>
-                  <Link href={`/admin/orders/${o.id}`}>{o.publicRef}</Link>
-                </td>
-                <td>
-                  <span
-                    className="status-pill"
-                    data-tone={statusTone(o.status)}
-                  >
-                    {o.status}
-                  </span>
-                </td>
-                <td>{o.shipDate}</td>
-                <td>
-                  {o.productName} / {o.subName}
-                </td>
-                <td>{senToRm(o.totalSen)}</td>
-                <td>{o.email}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <OrdersBulkTable
+        rows={rows.map((o) => ({
+          id: o.id,
+          publicRef: o.publicRef,
+          status: o.status,
+          shipDate: o.shipDate,
+          totalLabel: senToRm(o.totalSen),
+          email: o.email,
+          productName: o.productName,
+          subName: o.subName,
+          hasDelyva: Boolean(o.delyvaOrderId),
+          trackingNumber: o.trackingNumber,
+        }))}
+      />
+
       {!rows.length ? (
         <p className="muted" style={{ marginTop: "1rem" }}>
           No orders match these filters.

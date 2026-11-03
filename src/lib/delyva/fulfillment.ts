@@ -1,7 +1,8 @@
-import { eq } from "drizzle-orm";
+import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import {
   cancelDelyvaOrder,
   createDelyvaOrder,
+  DelyvaError,
   getDelyvaCustomer,
   getDelyvaOrderDetails,
   processDelyvaOrder,
@@ -15,8 +16,10 @@ import { getDb } from "@/lib/db";
 import { orders, products, subProducts } from "@/lib/db/schema";
 import { getRuntimeEnv } from "@/lib/runtime-env";
 
+const CREATE_LOCK = "create_in_progress";
+const COURIER_SPX = "Shopee Express (SPX)";
+
 function shipDateToSchedule(shipDate: string, hour: number): string {
-  // Malaysia +08:00
   return `${shipDate}T${String(hour).padStart(2, "0")}:00:00+0800`;
 }
 
@@ -77,6 +80,8 @@ async function persistDelyvaFields(
     delyvaTrackingNo: string | null;
     delyvaServiceCode: string | null;
     delyvaStatusCode: number | null;
+    delyvaCourier: string | null;
+    delyvaLastError: string | null;
     status: typeof orders.$inferSelect.status;
     adminNotes: string | null;
   }>,
@@ -103,79 +108,196 @@ function applyDetailsPatch(details: DelyvaOrderDetails, serviceCode?: string) {
       null,
     delyvaStatusCode:
       typeof details.statusCode === "number" ? details.statusCode : null,
+    delyvaCourier: COURIER_SPX,
+  };
+}
+
+function alreadyLinked(order: typeof orders.$inferSelect): boolean {
+  return Boolean(order.delyvaOrderId || order.trackingNumber);
+}
+
+async function returnExistingShipment(orderId: string) {
+  const { order } = await loadOrderBundle(orderId);
+  if (order.delyvaOrderId) {
+    try {
+      const details = await syncDelyvaOrderDetails(orderId);
+      return {
+        info: `Already linked to Delyva ${order.delyvaOrderId}${
+          order.trackingNumber ? ` · tracking ${order.trackingNumber}` : ""
+        }. Returned saved shipment (create skipped).`,
+        details: details.details,
+        skippedCreate: true as const,
+      };
+    } catch {
+      return {
+        info: `Already linked to Delyva ${order.delyvaOrderId}${
+          order.trackingNumber ? ` · tracking ${order.trackingNumber}` : ""
+        }. Create skipped.`,
+        details: undefined,
+        skippedCreate: true as const,
+      };
+    }
+  }
+  return {
+    info: `Tracking ${order.trackingNumber} already saved — create skipped.`,
+    details: undefined,
+    skippedCreate: true as const,
   };
 }
 
 /**
  * Create a Shopee Express (SPX) shipment on Delyva for a Petunia order,
  * process it, and persist the tracking / consignment number.
+ * Runs create at most once per order until cancel clears the link.
  */
 export async function createAndConfirmDelyvaShipment(orderId: string) {
+  const initial = await loadOrderBundle(orderId);
+  if (alreadyLinked(initial.order)) {
+    return returnExistingShipment(orderId);
+  }
+
+  const db = await getDb();
+  // Claim create lock so concurrent confirms do not double-POST /order.
+  const claimed = await db
+    .update(orders)
+    .set({
+      delyvaLastError: CREATE_LOCK,
+      delyvaCourier: COURIER_SPX,
+      updatedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(orders.id, orderId),
+        isNull(orders.delyvaOrderId),
+        isNull(orders.trackingNumber),
+        sql`${orders.delyvaLastError} is distinct from ${CREATE_LOCK}`,
+      ),
+    )
+    .returning();
+
+  if (!claimed.length) {
+    const again = await loadOrderBundle(orderId);
+    if (alreadyLinked(again.order)) {
+      return returnExistingShipment(orderId);
+    }
+    if (again.order.delyvaLastError === CREATE_LOCK) {
+      return {
+        info: "Delyva create already in progress for this order — create skipped.",
+        details: undefined,
+        skippedCreate: true as const,
+      };
+    }
+    return returnExistingShipment(orderId);
+  }
+
   const { order, productName, subName } = await loadOrderBundle(orderId);
-  if (order.delyvaOrderId) {
-    const details = await syncDelyvaOrderDetails(orderId);
+
+  try {
+    const customer = await getDelyvaCustomer();
+    const origin = await originContactFromAccount();
+    if (!origin.address1 || !origin.postcode || !origin.phone) {
+      throw new Error(
+        "Delyva origin address/phone incomplete. Update the Delyva customer profile or set DELYVA_ORIGIN_* env.",
+      );
+    }
+    const destination = destinationFromOrder(order);
+    const serviceCode = await quoteSpxServiceCode({
+      customerId: customer.id,
+      origin,
+      destination,
+    }).catch(() => DELYVA_SPX_SERVICE_CODE);
+
+    const originScheduledAt = shipDateToSchedule(order.shipDate, 11);
+    const destinationScheduledAt = shipDateToSchedule(order.shipDate, 17);
+
+    // Re-check immediately before network create (another worker may have linked).
+    const preCreate = await loadOrderBundle(orderId);
+    if (alreadyLinked(preCreate.order)) {
+      await persistDelyvaFields(orderId, { delyvaLastError: null });
+      return returnExistingShipment(orderId);
+    }
+
+    let created: DelyvaOrderDetails;
+    try {
+      created = await createDelyvaOrder({
+        customerId: customer.id,
+        serviceCode,
+        referenceNo: order.publicRef,
+        process: false,
+        note: `${productName} · ${subName}`,
+        itemName: `${productName} — ${subName}`,
+        priceSen: order.unitPriceSen + order.surchargeSen,
+        origin: { ...origin, scheduledAt: originScheduledAt },
+        destination: { ...destination, scheduledAt: destinationScheduledAt },
+      });
+    } catch (err) {
+      // Duplicate / 400 on second create: do not invent a new shipment.
+      const message =
+        err instanceof DelyvaError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Create failed";
+      const statusHint =
+        err instanceof DelyvaError ? ` (code ${err.code ?? "n/a"})` : "";
+      await persistDelyvaFields(orderId, {
+        delyvaLastError: `create failed${statusHint}: ${message}`.slice(0, 500),
+        delyvaCourier: COURIER_SPX,
+      });
+      throw new Error(
+        `Delyva create failed${statusHint}: ${message}. Create was not retried. If a shipment already exists on Delyva for this ref, save its id via Get details after linking, or cancel and recreate.`,
+      );
+    }
+
+    const delyvaOrderId = String(created.id);
+    // Persist id immediately so any parallel confirm sees the link.
+    await persistDelyvaFields(orderId, {
+      delyvaOrderId,
+      delyvaServiceCode: serviceCode,
+      delyvaCourier: COURIER_SPX,
+      delyvaStatusCode:
+        typeof created.statusCode === "number" ? created.statusCode : null,
+      delyvaLastError: null,
+    });
+
+    await processDelyvaOrder(delyvaOrderId, {
+      serviceCode,
+      originScheduledAt,
+      destinationScheduledAt,
+    });
+
+    const details = await getDelyvaOrderDetails(delyvaOrderId);
+    const patch = applyDetailsPatch(details, serviceCode);
+    await persistDelyvaFields(orderId, {
+      ...patch,
+      delyvaLastError: null,
+      status: "confirmed",
+    });
+
     return {
-      info: `Delyva shipment already linked (${order.delyvaOrderId}). Tracking refreshed.`,
+      info: patch.trackingNumber
+        ? `Confirmed on Delyva (SPX). Tracking ${patch.trackingNumber}.`
+        : `Confirmed on Delyva (SPX). Order ${delyvaOrderId} — tracking pending; refresh details shortly.`,
       details,
+      skippedCreate: false as const,
     };
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Unexpected Delyva error";
+    // Keep lock cleared if we never got an id, so admin can retry after fixing.
+    const current = await loadOrderBundle(orderId);
+    if (!current.order.delyvaOrderId) {
+      await persistDelyvaFields(orderId, {
+        delyvaLastError: message.slice(0, 500),
+        delyvaCourier: COURIER_SPX,
+      });
+    } else {
+      await persistDelyvaFields(orderId, {
+        delyvaLastError: message.slice(0, 500),
+      });
+    }
+    throw err;
   }
-
-  const customer = await getDelyvaCustomer();
-  const origin = await originContactFromAccount();
-  if (!origin.address1 || !origin.postcode || !origin.phone) {
-    throw new Error(
-      "Delyva origin address/phone incomplete. Update the Delyva customer profile or set DELYVA_ORIGIN_* env.",
-    );
-  }
-  const destination = destinationFromOrder(order);
-  const serviceCode = await quoteSpxServiceCode({
-    customerId: customer.id,
-    origin,
-    destination,
-  }).catch(() => DELYVA_SPX_SERVICE_CODE);
-
-  const originScheduledAt = shipDateToSchedule(order.shipDate, 11);
-  const destinationScheduledAt = shipDateToSchedule(order.shipDate, 17);
-
-  const created = await createDelyvaOrder({
-    customerId: customer.id,
-    serviceCode,
-    referenceNo: order.publicRef,
-    process: false,
-    note: `${productName} · ${subName}`,
-    itemName: `${productName} — ${subName}`,
-    priceSen: order.unitPriceSen + order.surchargeSen,
-    origin: { ...origin, scheduledAt: originScheduledAt },
-    destination: { ...destination, scheduledAt: destinationScheduledAt },
-  });
-
-  const delyvaOrderId = String(created.id);
-  await persistDelyvaFields(orderId, {
-    delyvaOrderId,
-    delyvaServiceCode: serviceCode,
-    delyvaStatusCode:
-      typeof created.statusCode === "number" ? created.statusCode : null,
-  });
-
-  await processDelyvaOrder(delyvaOrderId, {
-    serviceCode,
-    originScheduledAt,
-    destinationScheduledAt,
-  });
-
-  const details = await getDelyvaOrderDetails(delyvaOrderId);
-  const patch = applyDetailsPatch(details, serviceCode);
-  await persistDelyvaFields(orderId, {
-    ...patch,
-    status: "confirmed",
-  });
-
-  return {
-    info: patch.trackingNumber
-      ? `Confirmed on Delyva (SPX). Tracking ${patch.trackingNumber}.`
-      : `Confirmed on Delyva (SPX). Order ${delyvaOrderId} — tracking pending; refresh details shortly.`,
-    details,
-  };
 }
 
 export async function processExistingDelyvaShipment(orderId: string) {
@@ -186,12 +308,21 @@ export async function processExistingDelyvaShipment(orderId: string) {
   const serviceCode = order.delyvaServiceCode || DELYVA_SPX_SERVICE_CODE;
   const originScheduledAt = shipDateToSchedule(order.shipDate, 11);
   const destinationScheduledAt = shipDateToSchedule(order.shipDate, 17);
-  await processDelyvaOrder(order.delyvaOrderId, {
-    serviceCode,
-    originScheduledAt,
-    destinationScheduledAt,
-  });
-  return syncDelyvaOrderDetails(orderId);
+  try {
+    await processDelyvaOrder(order.delyvaOrderId, {
+      serviceCode,
+      originScheduledAt,
+      destinationScheduledAt,
+    });
+    await persistDelyvaFields(orderId, { delyvaLastError: null });
+    return syncDelyvaOrderDetails(orderId);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Process failed";
+    await persistDelyvaFields(orderId, {
+      delyvaLastError: message.slice(0, 500),
+    });
+    throw err;
+  }
 }
 
 export async function syncDelyvaOrderDetails(orderId: string) {
@@ -199,36 +330,84 @@ export async function syncDelyvaOrderDetails(orderId: string) {
   if (!order.delyvaOrderId) {
     throw new Error("No Delyva shipment on this order yet.");
   }
-  const details = await getDelyvaOrderDetails(order.delyvaOrderId);
-  const patch = applyDetailsPatch(
-    details,
-    order.delyvaServiceCode ?? undefined,
-  );
-  await persistDelyvaFields(orderId, patch);
-  return {
-    info: patch.trackingNumber
-      ? `Tracking ${patch.trackingNumber} (status ${patch.delyvaStatusCode ?? "n/a"}).`
-      : `Delyva status ${patch.delyvaStatusCode ?? "n/a"} — consignment not issued yet.`,
-    details,
-  };
+  try {
+    const details = await getDelyvaOrderDetails(order.delyvaOrderId);
+    const patch = applyDetailsPatch(
+      details,
+      order.delyvaServiceCode ?? undefined,
+    );
+    await persistDelyvaFields(orderId, {
+      ...patch,
+      delyvaLastError: null,
+    });
+    return {
+      info: patch.trackingNumber
+        ? `Tracking ${patch.trackingNumber} (status ${patch.delyvaStatusCode ?? "n/a"}).`
+        : `Delyva status ${patch.delyvaStatusCode ?? "n/a"} — consignment not issued yet.`,
+      details,
+    };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Details failed";
+    await persistDelyvaFields(orderId, {
+      delyvaLastError: message.slice(0, 500),
+    });
+    throw err;
+  }
 }
 
+/** Cancel on Delyva and clear the local link so a later confirm may create again. */
 export async function cancelDelyvaShipment(orderId: string) {
   const { order } = await loadOrderBundle(orderId);
   if (!order.delyvaOrderId) {
     throw new Error("No Delyva shipment to cancel.");
   }
-  const details = await cancelDelyvaOrder(order.delyvaOrderId);
-  const patch = applyDetailsPatch(
-    details,
-    order.delyvaServiceCode ?? undefined,
-  );
+  try {
+    await cancelDelyvaOrder(order.delyvaOrderId);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Cancel failed";
+    await persistDelyvaFields(orderId, {
+      delyvaLastError: message.slice(0, 500),
+    });
+    throw err;
+  }
+
   await persistDelyvaFields(orderId, {
-    ...patch,
+    delyvaOrderId: null,
+    trackingNumber: null,
+    delyvaTrackingNo: null,
+    delyvaServiceCode: null,
+    delyvaStatusCode: null,
+    delyvaCourier: null,
+    delyvaLastError: null,
     status: "cancelled",
   });
+
   return {
-    info: `Delyva shipment cancelled${patch.trackingNumber ? ` (${patch.trackingNumber})` : ""}.`,
-    details,
+    info: "Delyva shipment cancelled and local link cleared — confirm may create again.",
+    details: undefined,
   };
+}
+
+export async function listDelyvaOrderIdsForPetuniaOrders(
+  orderIds: string[],
+): Promise<{ orderId: string; delyvaOrderId: string; publicRef: string }[]> {
+  if (!orderIds.length) return [];
+  const db = await getDb();
+  const rows = await db
+    .select({
+      orderId: orders.id,
+      delyvaOrderId: orders.delyvaOrderId,
+      publicRef: orders.publicRef,
+    })
+    .from(orders)
+    .where(inArray(orders.id, orderIds));
+  return rows
+    .filter((r): r is typeof r & { delyvaOrderId: string } =>
+      Boolean(r.delyvaOrderId),
+    )
+    .map((r) => ({
+      orderId: r.orderId,
+      delyvaOrderId: r.delyvaOrderId!,
+      publicRef: r.publicRef,
+    }));
 }

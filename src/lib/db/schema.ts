@@ -196,6 +196,10 @@ export const orders = pgTable(
     delyvaTrackingNo: text("delyva_tracking_no"),
     delyvaServiceCode: text("delyva_service_code"),
     delyvaStatusCode: integer("delyva_status_code"),
+    /** Human courier label — always SPX / Shopee Express for Petunia. */
+    delyvaCourier: text("delyva_courier"),
+    /** Last Delyva API error (or create_in_progress lock). Cleared on success/cancel. */
+    delyvaLastError: text("delyva_last_error"),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
     ...timestamps,
   },
