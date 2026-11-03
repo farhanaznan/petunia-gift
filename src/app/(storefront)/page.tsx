@@ -21,7 +21,6 @@ export default async function HomePage() {
       return {
         product: p,
         from,
-        tall: index % 3 === 1,
         index,
       };
     }),
@@ -42,23 +41,23 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="home-featured" style={{ width: "100%", paddingTop: 0 }}>
+      <section className="browse-section">
         <Reveal>
-          <h2>The collection</h2>
+          <header className="browse-header">
+            <h2>The collection</h2>
+            <p>Big photos, soft bubbles — tap a gift to choose your ship date.</p>
+          </header>
         </Reveal>
         {tiles.length ? (
-          <div className="masonry">
-            {tiles.map(({ product, from, tall, index }) => (
+          <div className="product-row">
+            {tiles.map(({ product, from, index }) => (
               <ProductTile
                 key={product.id}
                 href={`/shop/${product.slug}`}
                 name={product.name}
-                line={product.description}
                 priceLabel={from != null ? `from ${senToRm(from)}` : "View"}
                 imageKey={product.heroImageKey}
                 badgeText={product.badgeText}
-                natureLabel={product.nature.replaceAll("_", " ")}
-                tall={tall}
                 index={index}
               />
             ))}
@@ -69,7 +68,7 @@ export default async function HomePage() {
             <p>The gallery is being prepared. Check back shortly.</p>
           </div>
         )}
-        <div className="cta-row" style={{ marginTop: "0.75rem" }}>
+        <div className="cta-row" style={{ marginTop: "0.5rem" }}>
           <Link className="button secondary" href="/shop">
             View all
           </Link>

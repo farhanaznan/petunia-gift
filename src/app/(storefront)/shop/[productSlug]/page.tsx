@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ShipDatePicker } from "@/components/checkout/ship-date-picker";
+import { ProductTile } from "@/components/gallery/product-tile";
 import { PageShell } from "@/components/page-shell";
 import {
   listOpenShipDatesForProduct,
@@ -9,6 +9,7 @@ import {
 } from "@/lib/catalog/capacity";
 import {
   getProductBySlug,
+  listSubImages,
   listSubsForProduct,
 } from "@/lib/catalog/queries";
 import { senToRm } from "@/lib/money";
@@ -49,27 +50,29 @@ export default async function ProductPage({
     ? subs.filter((s) => availableSubIds?.has(s.id))
     : [];
 
+  const subImageEntries = await Promise.all(
+    visibleSubs.map(async (sub) => {
+      try {
+        const images = await listSubImages(sub.id);
+        return [sub.id, images[0]?.storageKey ?? null] as const;
+      } catch {
+        return [sub.id, null] as const;
+      }
+    }),
+  );
+  const subImageById = new Map(subImageEntries);
+
   return (
     <PageShell kicker={nature.label} title={product.name} lead={product.description}>
       {product.heroImageKey ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
+          className="product-hero-frame"
           src={`/api/media?key=${encodeURIComponent(product.heroImageKey)}`}
           alt=""
-          style={{
-            width: "100%",
-            aspectRatio: "16 / 9",
-            objectFit: "cover",
-            marginBottom: "1.75rem",
-            background: "var(--placeholder)",
-          }}
         />
       ) : (
-        <div
-          className="masonry-placeholder"
-          style={{ aspectRatio: "16 / 9", marginBottom: "1.75rem" }}
-          aria-hidden
-        />
+        <div className="masonry-placeholder product-hero-frame" aria-hidden />
       )}
 
       {product.badgeText ? (
@@ -99,27 +102,17 @@ export default async function ProductPage({
             Then choose an option · shipping {selectedDate}
           </p>
           {visibleSubs.length ? (
-            <div className="sub-picker" role="list">
-              {visibleSubs.map((sub) => (
-                <Link
+            <div className="product-row">
+              {visibleSubs.map((sub, index) => (
+                <ProductTile
                   key={sub.id}
-                  role="listitem"
-                  className="sub-picker-item"
                   href={`/shop/${product.slug}/${sub.slug}?shipDate=${encodeURIComponent(selectedDate)}`}
-                >
-                  <div>
-                    <strong>
-                      {sub.name}
-                      {sub.badgeText ? (
-                        <span className="badge">{sub.badgeText}</span>
-                      ) : null}
-                    </strong>
-                    <p className="product-link-meta">
-                      {sub.description || "Select to customise & checkout"}
-                    </p>
-                  </div>
-                  <div className="product-link-price">{senToRm(sub.priceSen)}</div>
-                </Link>
+                  name={sub.name}
+                  priceLabel={senToRm(sub.priceSen)}
+                  imageKey={subImageById.get(sub.id) ?? product.heroImageKey}
+                  badgeText={sub.badgeText}
+                  index={index}
+                />
               ))}
             </div>
           ) : (

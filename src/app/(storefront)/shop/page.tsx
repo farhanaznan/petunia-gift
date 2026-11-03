@@ -16,37 +16,29 @@ export default async function ShopPage() {
         if (min == null || s.priceSen < min) return s.priceSen;
         return min;
       }, null);
-      return { product, from, tall: index % 3 === 1, optionCount: subs.length, index };
+      return { product, from, index };
     }),
   );
 
   return (
     <PageShell
-      kicker="Shop"
-      title="Collections"
+      title="Shop"
       lead={
         products.length
-          ? "Choose a collection, pick your ship date, personalise where needed, then reserve your gift."
+          ? "Handmade gifts ready to personalise — pick a collection, choose your ship date, and reserve yours."
           : undefined
       }
     >
       {tiles.length ? (
-        <div className="masonry">
-          {tiles.map(({ product, from, tall, optionCount, index }) => (
+        <div className="product-row">
+          {tiles.map(({ product, from, index }) => (
             <ProductTile
               key={product.id}
               href={`/shop/${product.slug}`}
               name={product.name}
-              line={
-                optionCount
-                  ? `${product.description} · ${optionCount} option${optionCount === 1 ? "" : "s"}`
-                  : product.description
-              }
               priceLabel={from != null ? `from ${senToRm(from)}` : "View"}
               imageKey={product.heroImageKey}
               badgeText={product.badgeText}
-              natureLabel={product.nature.replaceAll("_", " ")}
-              tall={tall}
               index={index}
             />
           ))}
