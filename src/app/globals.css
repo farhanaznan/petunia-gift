@@ -1,21 +1,23 @@
 :root {
-  --bg: #f4efe8;
-  --bg-paper: #fcfaf6;
-  --ink: #1a1714;
-  --muted: #746b63;
-  --accent: #b45c4a;
-  --accent-soft: #f3e0da;
-  --line: color-mix(in oklab, var(--ink) 11%, transparent);
+  /* Cool studio mist + coral — distinct from cream/Fraunces gallery */
+  --bg: #e7eef2;
+  --bg-paper: #ffffff;
+  --ink: #102431;
+  --muted: #5b6d78;
+  --accent: #ff5a5f;
+  --accent-soft: #ffe3e4;
+  --teal: #1f8a7a;
+  --teal-soft: #d7f3ee;
+  --line: color-mix(in oklab, var(--ink) 12%, transparent);
   --line-soft: color-mix(in oklab, var(--ink) 7%, transparent);
-  --placeholder: #e7e0d6;
+  --placeholder: #d9e4ea;
   --page-max: 1040px;
   --gutter: clamp(1rem, 4vw, 2.5rem);
-  --radius: 0;
+  --radius: 1.15rem;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --font-display: var(--font-display);
-  --font-script: var(--font-script);
   --font-body: var(--font-body);
-  --shadow-lift: 0 14px 36px color-mix(in oklab, var(--ink) 10%, transparent);
+  --shadow-lift: 0 18px 40px color-mix(in oklab, var(--ink) 12%, transparent);
 }
 
 * {
@@ -32,9 +34,10 @@ body {
   min-height: 100%;
   color: var(--ink);
   background:
-    radial-gradient(900px 480px at 12% -8%, #fffdf9 0%, transparent 55%),
-    radial-gradient(700px 420px at 100% 8%, var(--accent-soft) 0%, transparent 48%),
-    linear-gradient(180deg, #f7f2eb 0%, var(--bg) 42%, #efe8df 100%);
+    radial-gradient(880px 420px at 8% -10%, #ffffff 0%, transparent 52%),
+    radial-gradient(720px 460px at 100% 0%, var(--teal-soft) 0%, transparent 46%),
+    radial-gradient(640px 380px at 70% 100%, var(--accent-soft) 0%, transparent 42%),
+    linear-gradient(180deg, #f4f8fb 0%, var(--bg) 48%, #dfe9ef 100%);
   background-attachment: fixed;
   font-family: var(--font-body), "Avenir Next", sans-serif;
   font-size: 15.5px;
@@ -70,14 +73,14 @@ a:hover {
 
 .brand,
 .brand-script {
-  font-family: var(--font-script), cursive;
-  font-weight: 400;
-  letter-spacing: 0.01em;
+  font-family: var(--font-display), "Avenir Next", sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.03em;
   text-decoration: none;
 }
 
 .brand-script {
-  font-size: clamp(2.15rem, 4.2vw, 3rem);
+  font-size: clamp(1.55rem, 3.2vw, 2rem);
   line-height: 1;
   transition: color 200ms var(--ease), transform 220ms var(--ease);
 }
@@ -92,7 +95,7 @@ a:hover {
 .site-header {
   width: min(var(--page-max), calc(100% - (var(--gutter) * 2)));
   margin: 0 auto;
-  padding: 1.45rem 0 0;
+  padding: 1.2rem 0 0;
   background: transparent;
 }
 
@@ -216,11 +219,11 @@ a:hover {
 
 .page-shell > h1,
 .page-kicker + h1 {
-  font-family: var(--font-display), Georgia, serif;
-  font-size: clamp(2.35rem, 5.2vw, 3.55rem);
-  font-weight: 500;
+  font-family: var(--font-display), "Avenir Next", sans-serif;
+  font-size: clamp(2.2rem, 5vw, 3.35rem);
+  font-weight: 700;
   line-height: 1.05;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.035em;
   margin: 0 0 0.75rem;
   text-align: center;
 }
@@ -264,6 +267,7 @@ a:hover {
   overflow: hidden;
   background: var(--placeholder);
   margin-bottom: 2.85rem;
+  border-radius: calc(var(--radius) + 0.55rem);
   box-shadow: var(--shadow-lift);
   animation: hero-fade 700ms var(--ease) both;
 }
@@ -280,7 +284,7 @@ a:hover {
 
 .gallery-hero-placeholder {
   background:
-    linear-gradient(145deg, #ddd4c8 0%, #ebe4da 42%, #d8cfc3 100%);
+    linear-gradient(145deg, #c5d7e0 0%, #e8f1f5 42%, #b7cfd6 100%);
 }
 
 .gallery-hero-overlay {
@@ -292,27 +296,28 @@ a:hover {
   padding: 1.5rem;
   background: linear-gradient(
     180deg,
-    color-mix(in oklab, black 12%, transparent),
-    color-mix(in oklab, black 42%, transparent)
+    color-mix(in oklab, #102431 18%, transparent),
+    color-mix(in oklab, #102431 58%, transparent)
   );
-  color: #faf7f2;
+  color: #f4fafc;
   animation: overlay-rise 800ms var(--ease) 120ms both;
 }
 
 .gallery-hero-kicker {
   margin: 0 0 0.5rem;
   font-size: 0.7rem;
-  letter-spacing: 0.3em;
+  letter-spacing: 0.28em;
   text-transform: uppercase;
-  font-weight: 500;
-  color: color-mix(in oklab, white 88%, var(--accent-soft));
+  font-weight: 600;
+  color: color-mix(in oklab, white 88%, var(--teal-soft));
 }
 
 .gallery-hero-script {
   margin: 0;
-  font-family: var(--font-script), cursive;
-  font-size: clamp(2.6rem, 6.5vw, 4.3rem);
-  font-weight: 400;
+  font-family: var(--font-display), "Avenir Next", sans-serif;
+  font-size: clamp(2.3rem, 6vw, 3.8rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
   line-height: 1;
 }
 
@@ -342,10 +347,10 @@ a:hover {
 }
 
 .browse-header h2 {
-  font-family: var(--font-display), Georgia, serif;
-  font-size: clamp(2rem, 4.5vw, 3rem);
-  font-weight: 500;
-  letter-spacing: -0.02em;
+  font-family: var(--font-display), "Avenir Next", sans-serif;
+  font-size: clamp(1.9rem, 4.2vw, 2.85rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
   margin: 0 0 0.65rem;
 }
 
@@ -394,13 +399,13 @@ a:hover {
   border-radius: 50%;
   overflow: hidden;
   background:
-    radial-gradient(circle at 32% 28%, #fffefb 0%, transparent 42%),
-    linear-gradient(165deg, #fffdf9, var(--bg-paper) 48%, #efe6db);
-  border: 1px solid color-mix(in oklab, white 55%, var(--line-soft));
+    radial-gradient(circle at 32% 28%, #ffffff 0%, transparent 42%),
+    linear-gradient(165deg, #f7fcfb, var(--bg-paper) 48%, var(--teal-soft));
+  border: 1px solid color-mix(in oklab, white 60%, var(--line-soft));
   box-shadow:
-    0 1px 0 color-mix(in oklab, white 80%, transparent),
-    0 14px 28px color-mix(in oklab, var(--ink) 9%, transparent),
-    0 4px 10px color-mix(in oklab, var(--accent) 8%, transparent);
+    0 1px 0 color-mix(in oklab, white 85%, transparent),
+    0 14px 28px color-mix(in oklab, var(--ink) 10%, transparent),
+    0 4px 12px color-mix(in oklab, var(--teal) 12%, transparent);
   transition:
     box-shadow 280ms var(--ease),
     transform 280ms var(--ease),
@@ -408,11 +413,11 @@ a:hover {
 }
 
 .bubble-card:hover .bubble-well {
-  border-color: color-mix(in oklab, var(--accent) 28%, white);
+  border-color: color-mix(in oklab, var(--accent) 35%, white);
   box-shadow:
-    0 1px 0 color-mix(in oklab, white 85%, transparent),
+    0 1px 0 color-mix(in oklab, white 90%, transparent),
     0 22px 40px color-mix(in oklab, var(--ink) 14%, transparent),
-    0 8px 18px color-mix(in oklab, var(--accent) 14%, transparent);
+    0 8px 18px color-mix(in oklab, var(--accent) 18%, transparent);
   transform: scale(1.015);
 }
 
@@ -437,19 +442,21 @@ a:hover {
   place-items: center;
   aspect-ratio: 1;
   background:
-    linear-gradient(160deg, #e9e1d6, #f3eee6 55%, #ddd4c8);
+    linear-gradient(160deg, #cfe0e7, #eef6f8 55%, #bcd4db);
   color: color-mix(in oklab, var(--muted) 70%, transparent);
-  font-family: var(--font-script), cursive;
-  font-size: 1.55rem;
+  font-family: var(--font-display), "Avenir Next", sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
 }
 
 .bubble-name {
   margin: 0;
   max-width: 14rem;
-  font-family: var(--font-display), Georgia, serif;
-  font-size: 1.18rem;
-  font-weight: 500;
-  letter-spacing: -0.01em;
+  font-family: var(--font-display), "Avenir Next", sans-serif;
+  font-size: 1.12rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
   line-height: 1.25;
 }
 
@@ -470,7 +477,7 @@ a:hover {
   background:
     linear-gradient(160deg, #e9e1d6, #f3eee6 55%, #ddd4c8);
   color: color-mix(in oklab, var(--muted) 70%, transparent);
-  font-family: var(--font-script), cursive;
+  font-family: var(--font-display), "Avenir Next", sans-serif;
   font-size: 1.6rem;
 }
 
@@ -506,7 +513,7 @@ a:hover {
 }
 
 .empty-state h3 {
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-display), "Avenir Next", sans-serif;
   font-weight: 500;
   font-size: 1.45rem;
   margin: 0 0 0.5rem;
@@ -547,7 +554,7 @@ a:hover {
 }
 
 .sub-picker-item strong {
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-display), "Avenir Next", sans-serif;
   font-size: 1.3rem;
   font-weight: 500;
 }
@@ -589,7 +596,7 @@ a:hover {
 }
 
 .product-link-title {
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-display), "Avenir Next", sans-serif;
   font-size: 1.35rem;
   font-weight: 500;
   margin: 0 0 0.25rem;
@@ -624,7 +631,7 @@ a:hover {
   justify-content: center;
   padding: 0.78rem 1.4rem;
   border: 1px solid var(--ink);
-  border-radius: 0;
+  border-radius: var(--radius);
   background: var(--ink);
   color: var(--bg-paper);
   text-decoration: none;
@@ -691,7 +698,7 @@ button.button:disabled {
 
 .panel {
   border: 1px solid var(--line-soft);
-  border-radius: 0;
+  border-radius: var(--radius);
   padding: 1.3rem 1.4rem;
   background: color-mix(in oklab, var(--bg-paper) 92%, white);
   box-shadow: 0 1px 0 color-mix(in oklab, white 55%, transparent);
@@ -713,7 +720,7 @@ button.button:disabled {
   width: 100%;
   padding: 0.68rem 0.75rem;
   border: 1px solid var(--line);
-  border-radius: 0;
+  border-radius: var(--radius);
   background: #fff;
   color: var(--ink);
   font: inherit;
@@ -771,7 +778,7 @@ button.button:disabled {
   border: 1px solid var(--line);
   background: var(--bg-paper);
   color: var(--ink);
-  border-radius: 0;
+  border-radius: var(--radius);
   padding: 0.6rem 0.85rem;
   font: inherit;
   font-size: 0.8rem;
@@ -856,7 +863,7 @@ button.button:disabled {
 .variant-fallback {
   display: grid;
   place-items: center;
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-display), "Avenir Next", sans-serif;
   font-size: 1.5rem;
 }
 
@@ -872,7 +879,7 @@ button.button:disabled {
   padding: 1.15rem 1.2rem;
   border: 1px solid var(--line);
   background: linear-gradient(165deg, #1c1815, #2a2420);
-  color: #f4efe8;
+  color: #eef6f8;
 }
 
 .price-board .row {
@@ -887,7 +894,7 @@ button.button:disabled {
   margin-top: 0.35rem;
   padding-top: 0.55rem;
   border-top: 1px solid color-mix(in oklab, white 16%, transparent);
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-display), "Avenir Next", sans-serif;
   font-size: 1.25rem;
   font-weight: 500;
   color: #fff;
@@ -1094,7 +1101,7 @@ button.button:disabled {
 
 .ops-stat strong {
   display: block;
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-display), "Avenir Next", sans-serif;
   font-size: 1.75rem;
   font-weight: 500;
   line-height: 1;

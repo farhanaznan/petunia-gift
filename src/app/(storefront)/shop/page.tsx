@@ -25,7 +25,7 @@ export default async function ShopPage() {
       title="Shop"
       lead={
         products.length
-          ? "Handmade gifts ready to personalise — pick a collection, choose your ship date, and reserve yours."
+          ? "Handmade gifts ready to personalise — choose a collection, pick an option, then lock your ship date."
           : undefined
       }
     >

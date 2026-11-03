@@ -45,7 +45,7 @@ export default async function HomePage() {
         <Reveal>
           <header className="browse-header">
             <h2>The collection</h2>
-            <p>Big photos, soft bubbles — tap a gift to choose your ship date.</p>
+            <p>Choose a gift, pick your option, then lock a ship date with capacity.</p>
           </header>
         </Reveal>
         {tiles.length ? (

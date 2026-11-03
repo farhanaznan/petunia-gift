@@ -1,23 +1,17 @@
 import type { Metadata } from "next";
-import { DM_Sans, Fraunces, Great_Vibes } from "next/font/google";
+import { Manrope, Syne } from "next/font/google";
 import "./globals.css";
 
-const display = Fraunces({
+const display = Syne({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["500", "600", "700", "800"],
 });
 
-const script = Great_Vibes({
-  variable: "--font-script",
-  subsets: ["latin"],
-  weight: ["400"],
-});
-
-const body = DM_Sans({
+const body = Manrope({
   variable: "--font-body",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -36,9 +30,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${display.variable} ${script.variable} ${body.variable} antialiased`}
-      >
+      <body className={`${display.variable} ${body.variable} antialiased`}>
         {children}
       </body>
     </html>

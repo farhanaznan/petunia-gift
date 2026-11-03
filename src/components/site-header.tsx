@@ -54,7 +54,7 @@ export function SiteHeader() {
             Petunia Gift
           </Link>
         </div>
-        <div className="header-spacer">Malaysia</div>
+        <div className="header-spacer">Made in MY</div>
       </div>
       <nav className="site-nav" aria-label="Primary">
         {links.map((link) => (

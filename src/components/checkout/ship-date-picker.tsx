@@ -3,13 +3,16 @@
 import { useRouter } from "next/navigation";
 
 export function ShipDatePicker({
-  productSlug,
+  hrefBase,
   dates,
   selected,
+  label = "Then choose a ship date",
 }: {
-  productSlug: string;
+  /** Path without query, e.g. `/shop/museum-of-us/classic-frame` */
+  hrefBase: string;
   dates: { shipDate: string; remaining: number }[];
   selected?: string;
+  label?: string;
 }) {
   const router = useRouter();
 
@@ -25,7 +28,7 @@ export function ShipDatePicker({
   return (
     <div className="stack" style={{ marginBottom: "2rem" }}>
       <p className="field-label" style={{ textAlign: "center" }}>
-        Choose a ship date first
+        {label}
       </p>
       <div
         className="chip-row"
@@ -43,7 +46,7 @@ export function ShipDatePicker({
             data-selected={selected === d.shipDate}
             onClick={() => {
               router.push(
-                `/shop/${productSlug}?shipDate=${encodeURIComponent(d.shipDate)}`,
+                `${hrefBase}?shipDate=${encodeURIComponent(d.shipDate)}`,
               );
             }}
           >

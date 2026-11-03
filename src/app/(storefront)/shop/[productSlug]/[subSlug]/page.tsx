@@ -1,8 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ShipDatePicker } from "@/components/checkout/ship-date-picker";
 import { NatureCustomizer } from "@/components/customizers/nature-customizer";
 import { PageShell } from "@/components/page-shell";
-import { getCapacityOnDate } from "@/lib/catalog/capacity";
+import {
+  getCapacityOnDate,
+  listOpenCapacityWithRemaining,
+  usesSharedProductCapacity,
+} from "@/lib/catalog/capacity";
 import { getSubBySlugs } from "@/lib/catalog/queries";
 import { senToRm } from "@/lib/money";
 import { natureRegistry } from "@/lib/natures/registry";
@@ -22,17 +27,35 @@ export default async function SubProductPage({
   if (!found) notFound();
   const { product, sub } = found;
   const nature = natureRegistry[product.nature];
+  const hrefBase = `/shop/${product.slug}/${sub.slug}`;
+  const selectedDate =
+    shipDate && /^\d{4}-\d{2}-\d{2}$/.test(shipDate) ? shipDate : undefined;
 
-  if (!shipDate || !/^\d{4}-\d{2}-\d{2}$/.test(shipDate)) {
+  const dates = await listOpenCapacityWithRemaining(sub.id);
+
+  if (!selectedDate) {
     return (
       <PageShell
-        kicker={product.name}
+        kicker={`${product.name} · ${nature.label}`}
         title={sub.name}
-        lead="Choose a ship date on the product page before customising."
+        lead={`${senToRm(sub.priceSen)}${sub.badgeText ? ` · ${sub.badgeText}` : ""} — pick a ship date with remaining capacity, then personalise.`}
       >
+        {usesSharedProductCapacity(product.nature) ? (
+          <p className="muted" style={{ textAlign: "center", marginBottom: "1rem" }}>
+            Museum frames share one capacity pool per ship date.
+          </p>
+        ) : null}
+        <ShipDatePicker
+          hrefBase={hrefBase}
+          dates={dates.map((d) => ({
+            shipDate: d.shipDate,
+            remaining: d.remaining,
+          }))}
+          label="Choose a ship date"
+        />
         <div className="cta-row">
-          <Link className="button" href={`/shop/${product.slug}`}>
-            Pick a ship date
+          <Link className="button secondary" href={`/shop/${product.slug}`}>
+            Back to options
           </Link>
         </div>
       </PageShell>
@@ -43,20 +66,23 @@ export default async function SubProductPage({
     nature: product.nature,
     productId: product.id,
     subProductId: sub.id,
-    shipDate,
+    shipDate: selectedDate,
   });
   if (!cap) {
     return (
       <PageShell
         kicker={product.name}
         title={sub.name}
-        lead={`Ship date ${shipDate} is no longer available for this option.`}
+        lead={`Ship date ${selectedDate} is no longer available for this option.`}
       >
-        <div className="cta-row">
-          <Link className="button" href={`/shop/${product.slug}`}>
-            Choose another date
-          </Link>
-        </div>
+        <ShipDatePicker
+          hrefBase={hrefBase}
+          dates={dates.map((d) => ({
+            shipDate: d.shipDate,
+            remaining: d.remaining,
+          }))}
+          label="Pick another ship date"
+        />
       </PageShell>
     );
   }
@@ -65,15 +91,24 @@ export default async function SubProductPage({
     <PageShell
       kicker={`${product.name} · ${nature.label}`}
       title={sub.name}
-      lead={`${senToRm(sub.priceSen)}${sub.badgeText ? ` · ${sub.badgeText}` : ""} · ship ${shipDate} · ${cap.remaining} left — personalise, then checkout.`}
+      lead={`${senToRm(sub.priceSen)}${sub.badgeText ? ` · ${sub.badgeText}` : ""} · ship ${selectedDate} · ${cap.remaining} left — personalise, then checkout.`}
     >
+      <ShipDatePicker
+        hrefBase={hrefBase}
+        dates={dates.map((d) => ({
+          shipDate: d.shipDate,
+          remaining: d.remaining,
+        }))}
+        selected={selectedDate}
+        label="Ship date"
+      />
       <NatureCustomizer
         nature={product.nature}
         config={sub.config}
         productSlug={product.slug}
         subSlug={sub.slug}
         unitPriceSen={sub.priceSen}
-        shipDate={shipDate}
+        shipDate={selectedDate}
       />
     </PageShell>
   );

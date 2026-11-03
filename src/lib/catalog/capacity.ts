@@ -65,9 +65,10 @@ async function countUsedOrders(opts: {
 }
 
 /**
- * Open ship dates for a product (date-first checkout).
+ * Open ship dates for a product (used for shared Museum pools / admin views).
  * Museum: one shared pool per date across all frames.
  * Other natures: union of dates that still have remaining capacity on at least one sub.
+ * Storefront checkout is option-first, then date via listOpenCapacityWithRemaining.
  */
 export async function listOpenShipDatesForProduct(
   productId: string,
@@ -237,7 +238,7 @@ export async function listSubsWithCapacityOnDate(
   return out;
 }
 
-/** @deprecated Prefer listOpenShipDatesForProduct / getCapacityOnDate */
+/** Open ship dates for one sub-product (Museum uses shared product pool). */
 export async function listOpenCapacityWithRemaining(
   subProductId: string,
 ): Promise<OpenCapacityDate[]> {
